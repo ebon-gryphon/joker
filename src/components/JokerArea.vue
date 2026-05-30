@@ -16,7 +16,12 @@
             :class="'rarity-' + jokers[i - 1].rarity"
             :ref="el => { if (el) jokerRefs.value[i - 1] = el }"
           >
-            <div class="joker-art">{{ jokers[i - 1].art }}</div>
+            <div class="joker-art">
+              <div class="joker-card-back">
+                <img src="/card-back.png" class="joker-back-img" alt="card back" />
+                <span class="joker-card-emoji">{{ jokers[i - 1].art }}</span>
+              </div>
+            </div>
             <div class="joker-name">{{ jokers[i - 1].name }}</div>
             <div class="joker-desc">{{ jokers[i - 1].desc }}</div>
             <div class="joker-rarity-badge" :class="'badge-' + jokers[i - 1].rarity">
@@ -123,9 +128,37 @@ function rarityLabel(rarity) {
 }
 
 .joker-art {
-  font-size: 42px;
   margin-bottom: 8px;
-  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.joker-card-back {
+  width: 72px;
+  height: 100px;
+  border-radius: 8px;
+  position: relative;
+  overflow: hidden;
+}
+
+.joker-back-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.joker-card-emoji {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36px;
+  z-index: 1;
 }
 
 .joker-name {

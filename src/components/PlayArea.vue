@@ -36,9 +36,9 @@
 
     <!-- 牌堆（绝对定位，右下角） -->
     <div class="deck-pile" ref="deckRef">
-      <div class="deck-card deck-card-1"></div>
-      <div class="deck-card deck-card-2"></div>
-      <div class="deck-card deck-card-3"></div>
+      <div class="deck-card-back">
+        <img src="/card-back.png" class="deck-back-img" alt="card back" />
+      </div>
       <div class="deck-count">
         <span class="deck-num">{{ deckCount }}</span>
         <span class="deck-slash">/52</span>
@@ -185,69 +185,43 @@ defineExpose({ playAreaRef, playedZoneRef, deckRef, chipsBlockRef, multBlockRef,
   position: absolute;
   bottom: 16px;
   right: 16px;
-  width: 90px;
-  height: 130px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
   cursor: default;
 }
 
-.deck-card {
-  position: absolute;
+.deck-card-back {
   width: 80px;
   height: 115px;
   border-radius: 8px;
-  background: linear-gradient(135deg, #2a1a6e, #3d2490);
-  border: 2px solid rgba(120, 80, 200, 0.6);
+  position: relative;
+  overflow: hidden;
+  box-shadow: 3px 3px 0 rgba(0,0,0,0.4), 6px 6px 0 rgba(0,0,0,0.25);
 }
 
-/* 紫色花纹装饰 */
-.deck-card::after {
-  content: '';
-  position: absolute;
-  inset: 4px;
-  border: 1px dashed rgba(150, 100, 220, 0.4);
-  border-radius: 4px;
-}
-
-.deck-card-1 {
-  bottom: 0;
-  right: 0;
-  transform: rotate(-3deg);
-  z-index: 1;
-}
-
-.deck-card-2 {
-  bottom: 3px;
-  right: 3px;
-  transform: rotate(0deg);
-  z-index: 2;
-}
-
-.deck-card-3 {
-  bottom: 6px;
-  right: 6px;
-  transform: rotate(3deg);
-  z-index: 3;
-  background: linear-gradient(135deg, #3d2490, #4a2fa0);
+.deck-back-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 8px;
+  display: block;
 }
 
 .deck-count {
-  position: absolute;
-  bottom: -4px;
-  left: 0;
-  right: 0;
   text-align: center;
-  z-index: 4;
 }
 
 .deck-num {
   font-family: 'VT323', monospace;
-  font-size: 14px;
+  font-size: 16px;
   color: var(--gold);
 }
 
 .deck-slash {
   font-family: 'VT323', monospace;
-  font-size: 12px;
+  font-size: 14px;
   color: rgba(255, 200, 87, 0.6);
 }
 </style>
