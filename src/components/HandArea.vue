@@ -21,10 +21,10 @@
     <div class="hand-actions">
       <!-- 左侧：排序 -->
       <div class="actions-sort">
-        <button class="px-btn btn-sort" @click="$emit('sortByRank')">
+        <button class="px-btn btn-sort" @click="onSort('sortByRank')">
           按点排序
         </button>
-        <button class="px-btn btn-sort" @click="$emit('sortBySuit')">
+        <button class="px-btn btn-sort" @click="onSort('sortBySuit')">
           按花排序
         </button>
       </div>
@@ -66,6 +66,7 @@
 <script setup>
 import { ref } from 'vue'
 import CardView from './CardView.vue'
+import { playSfx } from '../composables/useAudio.js'
 
 const props = defineProps({
   hand: { type: Array, required: true },
@@ -87,7 +88,13 @@ function setCardRef(cardId, el) {
 }
 
 function onCardClick(card) {
+  playSfx(props.selectedCards.includes(card.id) ? 'deselect' : 'select')
   emit('selectCard', card.id)
+}
+
+function onSort(event) {
+  playSfx('sort')
+  emit(event)
 }
 
 function getCardEl(cardId) {
@@ -134,11 +141,11 @@ defineExpose({ handCardsRef, getCardEl, cardRefMap })
   gap: 8px;
   align-items: flex-end;
   flex-wrap: nowrap;
-  padding-top: 36px;
-  padding-bottom: 16px;
+  padding-top: 28px;
+  padding-bottom: 12px;
   overflow-x: auto;
   overflow-y: visible;
-  min-height: 196px;
+  min-height: 180px;
 }
 
 /* 操作按钮区 */

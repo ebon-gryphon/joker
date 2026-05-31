@@ -46,7 +46,7 @@
     </div>
 
     <div class="shop-actions">
-      <button class="px-btn btn-skip" @click="$emit('skip')">
+      <button class="px-btn btn-skip" @click="onSkip">
         跳过 →
       </button>
     </div>
@@ -56,6 +56,7 @@
 <script setup>
 import { computed } from 'vue'
 import { getShopSuggestion } from '../composables/useAI.js'
+import { playSfx } from '../composables/useAudio.js'
 
 const props = defineProps({
   shopItems: { type: Array, required: true },
@@ -106,8 +107,14 @@ function getBtnDisabled(item) {
 
 function onBuy(item) {
   if (!getBtnDisabled(item)) {
+    playSfx('buy')
     emit('buy', item.id)
   }
+}
+
+function onSkip() {
+  playSfx('skip')
+  emit('skip')
 }
 </script>
 

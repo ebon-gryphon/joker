@@ -14,7 +14,7 @@
           <div
             class="joker-card"
             :class="'rarity-' + jokers[i - 1].rarity"
-            :ref="el => { if (el) jokerRefs.value[i - 1] = el }"
+            :data-joker-index="i - 1"
           >
             <div class="joker-art">
               <div class="joker-card-back">
@@ -41,15 +41,9 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
-
-const props = defineProps({
+defineProps({
   jokers: { type: Array, required: true },
 })
-
-const jokerRefs = ref([])
-
-defineExpose({ jokerRefs })
 
 function rarityLabel(rarity) {
   const map = { common: '普通', rare: '稀有', legendary: '传说' }

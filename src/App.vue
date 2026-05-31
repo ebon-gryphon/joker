@@ -1,5 +1,5 @@
 <template>
-  <div class="app-layout">
+  <div class="app-layout" @click.once="onFirstInteraction">
     <!-- 游戏进行中 -->
     <template v-if="phase === 'playing'">
       <!-- 设置按钮 -->
@@ -64,7 +64,7 @@
       :jokerCount="jokers.length"
       :nextBlind="BLINDS[roundIndex + 1] || BLINDS[roundIndex]"
       @buy="handleBuy"
-      @skip="skipShop"
+      @skip="handleSkip"
     />
 
     <!-- 通关 / 失败 -->
@@ -91,6 +91,7 @@
 <script setup>
 import { ref, reactive, nextTick, watch } from 'vue'
 import gsap from 'gsap'
+import { initAudio, playSfx, startAiLoop, stopAiLoop, playBgm, applyAudioSettings } from './composables/useAudio.js'
 
 import SideBar from './components/SideBar.vue'
 import JokerArea from './components/JokerArea.vue'
@@ -128,7 +129,7 @@ const scoringState = reactive({
 })
 
 // ─── 设置 ───
-const DEFAULT_SETTINGS = { bgmVolume: 60, sfxVolume: 80, animSpeed: 1.0, showFormula: true }
+const DEFAULT_SETTINGS = { bgmVolume: 60, sfxVolume: 80, bgmMuted: false, sfxMuted: false, animSpeed: 1.0, showFormula: true }
 const SETTINGS_KEY = 'balatro.settings'
 
 const settings = ref({
@@ -140,7 +141,13 @@ animSpeed.value = settings.value.animSpeed
 function onSaveSettings(newSettings) {
   settings.value = newSettings
   animSpeed.value = newSettings.animSpeed
+  applyAudioSettings(newSettings)
   localStorage.setItem(SETTINGS_KEY, JSON.stringify(newSettings))
+}
+
+function onFirstInteraction() {
+  initAudio()
+  playBgm('main')
 }
 
 // ─── 组件 ref ───
@@ -157,6 +164,7 @@ function dur(ms) {
 async function handlePlay() {
   if (isScoring.value || selectedCards.value.length === 0) return
 
+  playSfx('play')
   const result = playHand()
   if (!result) return
 
@@ -175,12 +183,14 @@ async function handlePlay() {
     await delay(100)
 
     // 逐张高亮 + 飞字
-    const cardEls = playAreaRef.value?.cardRefs?.value || []
-    const chipsBlockEl = playAreaRef.value?.chipsBlockRef?.value
-    const multBlockEl = playAreaRef.value?.multBlockRef?.value
+    const cardEls = Array.from(document.querySelectorAll('.played-cards .card-view'))
+    const chipsBlockEl = document.querySelector('.scoring-chips-block')
+    const multBlockEl = document.querySelector('.scoring-mult-block')
 
     let runningChips = handType ? handType.chips : 0
     let runningMult = handType ? handType.mult : 1
+
+    playSfx('fly')
 
     // 逐张高亮（每张 150ms 间隔）
     for (let i = 0; i < pCards.length; i++) {
@@ -188,6 +198,7 @@ async function handlePlay() {
       runningChips += cardVal
 
       await delay(150)
+      playSfx('chip')
 
       // 高亮牌
       const cardEl = cardEls[i]?.$el || cardEls[i]
@@ -236,7 +247,7 @@ async function handlePlay() {
     await delay(pCards.length * 150 + 200)
 
     // Joker 效果依次触发
-    const jokerEls = jokerAreaRef.value?.jokerRefs?.value || []
+    const jokerEls = Array.from(document.querySelectorAll('.joker-card'))
 
     for (let j = 0; j < jokers.value.length; j++) {
       const joker = jokers.value[j]
@@ -257,6 +268,7 @@ async function handlePlay() {
       }
 
       await delay(200)
+      playSfx('joker')
 
       // 飞字
       if (multBlockEl && jokerEl) {
@@ -311,11 +323,13 @@ async function handlePlay() {
     await delay(200)
 
     // 中央弹出大字
+    playSfx('score')
     showScorePopupFn(`${runningChips} × ${runningMult} = ${score}`)
 
     await delay(600)
 
     // blindScore 数字累加
+    playSfx('count')
     const startScore = displayBlindScore.value
     const targetScore = startScore + score
     const scoreObj = { val: startScore }
@@ -340,6 +354,8 @@ async function handlePlay() {
     scoringState.handType = null
     scoringState.chips = 0
     scoringState.mult = 0
+    // 清空出牌区，避免打出的牌卡在中央不消失
+    playedCards.value = []
     // 确保 isScoring 不会永久卡住
     if (isScoring.value) isScoring.value = false
   }
@@ -405,6 +421,7 @@ function showScorePopupFn(text) {
 // ─── 弃牌处理 ───
 async function handleDiscard() {
   if (isScoring.value || discardsLeft.value <= 0 || selectedCards.value.length === 0) return
+  playSfx('discard')
   discardCards()
 }
 
@@ -413,7 +430,10 @@ async function handleAIPlay() {
   if (aiThinking.value || isScoring.value) return
 
   aiThinking.value = true
+  playSfx('ai-start')
+  startAiLoop()
   await delay(800)
+  stopAiLoop()
 
   const bestCombo = findBestPlay(hand.value, jokers.value)
   if (bestCombo.length > 0) {
@@ -441,16 +461,36 @@ function handleBuy(jokerId) {
   buyJoker(jokerId)
 }
 
+// ─── 商店跳过 ───
+function handleSkip() {
+  skipShop()
+}
+
 // ─── 工具函数 ───
 function delay(ms) {
   return new Promise(resolve => setTimeout(resolve, ms))
 }
 
 // 同步 displayBlindScore 与 blindScore（初始和重置时）
-watch(blindScore, (newVal, oldVal) => {
-  // 只在重置为0时同步（finishScoring 中会手动更新）
+watch(blindScore, (newVal) => {
   if (newVal === 0) displayBlindScore.value = 0
 }, { immediate: true })
+
+// phase 变化时切换 BGM 和播放对应音效
+watch(phase, (newPhase) => {
+  if (newPhase === 'playing') {
+    playBgm('main')
+  } else if (newPhase === 'shop') {
+    playSfx('shop-enter')
+    playBgm('shop')
+  } else if (newPhase === 'won') {
+    playSfx('win')
+    playBgm('win')
+  } else if (newPhase === 'lost') {
+    playSfx('lose')
+    playBgm('lose')
+  }
+})
 </script>
 
 <style scoped>
@@ -467,7 +507,7 @@ watch(blindScore, (newVal, oldVal) => {
 .main-area {
   flex: 1;
   display: grid;
-  grid-template-rows: 230px 1fr 320px;
+  grid-template-rows: 230px 1fr 290px;
   overflow: hidden;
   min-width: 0;
 }

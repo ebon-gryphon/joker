@@ -16,8 +16,13 @@
             max="100"
             v-model="localSettings.bgmVolume"
             class="settings-slider"
+            :disabled="localSettings.bgmMuted"
           />
-          <span class="settings-value">{{ localSettings.bgmVolume }}%</span>
+          <span class="settings-value">{{ localSettings.bgmMuted ? '静音' : localSettings.bgmVolume + '%' }}</span>
+          <label class="settings-toggle mute-toggle" title="BGM 静音">
+            <input type="checkbox" v-model="localSettings.bgmMuted" />
+            <span class="toggle-track"><span class="toggle-thumb"></span></span>
+          </label>
         </div>
 
         <!-- SFX 音量 -->
@@ -29,8 +34,13 @@
             max="100"
             v-model="localSettings.sfxVolume"
             class="settings-slider"
+            :disabled="localSettings.sfxMuted"
           />
-          <span class="settings-value">{{ localSettings.sfxVolume }}%</span>
+          <span class="settings-value">{{ localSettings.sfxMuted ? '静音' : localSettings.sfxVolume + '%' }}</span>
+          <label class="settings-toggle mute-toggle" title="SFX 静音">
+            <input type="checkbox" v-model="localSettings.sfxMuted" />
+            <span class="toggle-track"><span class="toggle-thumb"></span></span>
+          </label>
         </div>
 
         <!-- 动画速度 -->

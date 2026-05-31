@@ -1,7 +1,7 @@
 <template>
-  <div class="play-area" ref="playAreaRef">
+  <div class="play-area">
     <!-- 出牌区域 -->
-    <div class="played-zone" ref="playedZoneRef">
+    <div class="played-zone">
       <!-- 空态提示 -->
       <div v-if="!playedCards.length && !isScoring" class="played-empty">
         选择手牌组成牌型（1-5 张）
@@ -10,10 +10,9 @@
       <!-- 已打出的牌 -->
       <div v-if="playedCards.length" class="played-cards">
         <CardView
-          v-for="(card, idx) in playedCards"
+          v-for="card in playedCards"
           :key="card.id"
           :card="card"
-          :ref="el => { if (el) cardRefs.value[idx] = el }"
         />
       </div>
 
@@ -21,12 +20,12 @@
       <div v-if="scoringState.handType" class="scoring-display">
         <div class="scoring-hand-name">{{ scoringState.handType.name }}</div>
         <div class="scoring-chips-mult">
-          <div class="scoring-chips-block" ref="chipsBlockRef">
+          <div class="scoring-chips-block">
             <div class="scoring-label">chips</div>
             <div class="scoring-value chips-value">{{ scoringState.chips }}</div>
           </div>
           <div class="scoring-x">×</div>
-          <div class="scoring-mult-block" ref="multBlockRef">
+          <div class="scoring-mult-block">
             <div class="scoring-label">mult</div>
             <div class="scoring-value mult-value">{{ scoringState.mult }}</div>
           </div>
@@ -35,7 +34,7 @@
     </div>
 
     <!-- 牌堆（绝对定位，右下角） -->
-    <div class="deck-pile" ref="deckRef">
+    <div class="deck-pile">
       <div class="deck-card-back">
         <img src="/card-back.png" class="deck-back-img" alt="card back" />
       </div>
@@ -48,37 +47,31 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
 import CardView from './CardView.vue'
 
-const props = defineProps({
+defineProps({
   playedCards: { type: Array, default: () => [] },
   deckCount: { type: Number, required: true },
   isScoring: { type: Boolean, default: false },
   scoringState: { type: Object, default: () => ({ handType: null, chips: 0, mult: 0 }) },
 })
-
-const playAreaRef = ref(null)
-const playedZoneRef = ref(null)
-const deckRef = ref(null)
-const chipsBlockRef = ref(null)
-const multBlockRef = ref(null)
-const cardRefs = ref([])
-
-defineExpose({ playAreaRef, playedZoneRef, deckRef, chipsBlockRef, multBlockRef, cardRefs })
 </script>
 
 <style scoped>
 .play-area {
   position: relative;
   height: 100%;
+  /* 锁住栅格轨道，避免计分内容把 1fr 撑高导致底部按钮被裁切 */
+  min-height: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   background: rgba(0,0,0,0.1);
   border-bottom: 1px solid rgba(74, 107, 255, 0.15);
-  padding: 16px;
-  overflow: hidden;
+  padding: 10px 16px;
+  /* 计分动画（高亮上抬、Joker 放大）允许溢出，避免被裁切；并提高层级画在最上层 */
+  overflow: visible;
+  z-index: 50;
 }
 
 /* 出牌区 */
@@ -87,9 +80,18 @@ defineExpose({ playAreaRef, playedZoneRef, deckRef, chipsBlockRef, multBlockRef,
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 20px;
+  gap: 16px;
   width: 100%;
-  max-width: 700px;
+  max-width: 720px;
+  /* 计分内容整体提高优先级，确保完整展示在最上层 */
+  position: relative;
+  z-index: 60;
+}
+
+/* 出牌区里展示的牌尺寸 */
+.played-cards :deep(.card-view) {
+  width: 90px;
+  height: 130px;
 }
 
 .played-empty {
@@ -113,12 +115,17 @@ defineExpose({ playAreaRef, playedZoneRef, deckRef, chipsBlockRef, multBlockRef,
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
+  padding: 14px 28px;
+  border-radius: 16px;
+  background: rgba(10, 20, 56, 0.55);
+  border: 2px solid rgba(255, 200, 87, 0.25);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
 }
 
 .scoring-hand-name {
   font-family: 'Inter', 'PingFang SC', sans-serif;
-  font-size: 20px;
+  font-size: 24px;
   font-weight: 800;
   color: var(--gold);
   letter-spacing: 2px;
@@ -128,7 +135,7 @@ defineExpose({ playAreaRef, playedZoneRef, deckRef, chipsBlockRef, multBlockRef,
 .scoring-chips-mult {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 20px;
 }
 
 .scoring-chips-block,
@@ -136,9 +143,9 @@ defineExpose({ playAreaRef, playedZoneRef, deckRef, chipsBlockRef, multBlockRef,
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 8px 16px;
-  border-radius: 10px;
-  min-width: 120px;
+  padding: 12px 24px;
+  border-radius: 12px;
+  min-width: 150px;
 }
 
 .scoring-chips-block {
@@ -160,7 +167,7 @@ defineExpose({ playAreaRef, playedZoneRef, deckRef, chipsBlockRef, multBlockRef,
 
 .scoring-value {
   font-family: 'Press Start 2P', monospace;
-  font-size: 28px;
+  font-size: 34px;
   line-height: 1;
 }
 
