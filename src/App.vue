@@ -63,7 +63,9 @@
       :money="money"
       :jokerCount="jokers.length"
       :nextBlind="BLINDS[roundIndex + 1] || BLINDS[roundIndex]"
+      :rerollCost="SHOP_REROLL_COST"
       @buy="handleBuy"
+      @reroll="handleReroll"
       @skip="handleSkip"
     />
 
@@ -101,8 +103,9 @@ import ShopScreen from './components/ShopScreen.vue'
 import EndScreen from './components/EndScreen.vue'
 import SettingsModal from './components/SettingsModal.vue'
 
-import { useGameState, BLINDS } from './composables/useGameState.js'
-import { animSpeed, flyToElement, triggerJoker, showScorePopup, countUp } from './composables/useAnimations.js'
+import { useGameState, BLINDS, SHOP_REROLL_COST } from './composables/useGameState.js'
+import { applyJoker } from './composables/useHandDetector.js'
+import { animSpeed } from './composables/useAnimations.js'
 import { findBestPlay } from './composables/useAI.js'
 
 // ─── 游戏状态 ───
@@ -113,7 +116,7 @@ const {
   currentBlind, progress, selectedCount, previewScore,
   toggleCard, sortByRank, sortBySuit,
   playHand, finishScoring, discardCards,
-  buyJoker, skipShop, restart,
+  buyJoker, rerollShop, skipShop, restart,
 } = useGameState()
 
 // ─── UI 状态 ───
@@ -271,25 +274,31 @@ async function handlePlay() {
       playSfx('joker')
 
       // 飞字
-      if (multBlockEl && jokerEl) {
+      const isChipEffect = chipsDiff > 0 && multDiff === 0
+      const targetBlockEl = isChipEffect ? chipsBlockEl : multBlockEl
+
+      if (targetBlockEl && jokerEl) {
         const jokerRect = jokerEl.getBoundingClientRect()
-        const multRect = multBlockEl.getBoundingClientRect()
+        const targetRect = targetBlockEl.getBoundingClientRect()
 
         const span = document.createElement('div')
-        if (multDiff > 0) {
+        if (isChipEffect) {
+          span.textContent = `+${chipsDiff} Chips`
+        } else if (multDiff > 0) {
           span.textContent = joker.id === 'heart_collector' || joker.id === 'club_lover' || joker.id === 'royal_face'
             ? `×${newMult / runningMult}`
             : `+${multDiff} Mult`
         }
+        const effectColor = isChipEffect ? '#4dd6ff' : '#ff8844'
         span.style.cssText = `
           position: fixed;
-          color: #ff8844;
+          color: ${effectColor};
           font-family: 'Press Start 2P', monospace;
           font-size: 16px;
           font-weight: bold;
           pointer-events: none;
           z-index: 9999;
-          text-shadow: 0 0 10px #ff8844;
+          text-shadow: 0 0 10px ${effectColor};
           left: ${jokerRect.left + jokerRect.width / 2}px;
           top: ${jokerRect.top}px;
           transform: translate(-50%, 0);
@@ -297,8 +306,8 @@ async function handlePlay() {
         document.body.appendChild(span)
 
         gsap.to(span, {
-          left: multRect.left + multRect.width / 2,
-          top: multRect.top + multRect.height / 2,
+          left: targetRect.left + targetRect.width / 2,
+          top: targetRect.top + targetRect.height / 2,
           duration: dur(400),
           ease: 'power2.in',
           opacity: 0,
@@ -324,7 +333,9 @@ async function handlePlay() {
 
     // 中央弹出大字
     playSfx('score')
-    showScorePopupFn(`${runningChips} × ${runningMult} = ${score}`)
+    if (settings.value.showFormula) {
+      showScorePopupFn(`${runningChips} × ${runningMult} = ${score}`)
+    }
 
     await delay(600)
 
@@ -363,24 +374,7 @@ async function handlePlay() {
 
 // 应用 Joker 效果（用于动画预览）
 function applyJokerPreview(joker, cards, hand, chips, mult) {
-  switch (joker.id) {
-    case 'jester': return { chips, mult: mult + 4 }
-    case 'scholar': {
-      let m = mult
-      for (const c of cards) if (c.rank === 'A') m += 4
-      return { chips, mult: m }
-    }
-    case 'heart_collector':
-      return cards.some(c => c.suit === '♥') ? { chips, mult: mult * 4 } : { chips, mult }
-    case 'club_lover':
-      return cards.some(c => c.suit === '♣') ? { chips, mult: mult * 4 } : { chips, mult }
-    case 'royal_face':
-      return cards.some(c => ['J','Q','K'].includes(c.rank)) ? { chips, mult: mult * 10 } : { chips, mult }
-    case 'straight_flush_master':
-      return hand.name === '同花顺' ? { chips, mult: mult + 50 } : { chips, mult }
-    default:
-      return { chips, mult }
-  }
+  return applyJoker(joker, cards, hand, chips, mult)
 }
 
 function cardValue(rank) {
@@ -459,6 +453,10 @@ async function handleAIPlay() {
 // ─── 商店购买 ───
 function handleBuy(jokerId) {
   buyJoker(jokerId)
+}
+
+function handleReroll() {
+  if (rerollShop()) playSfx('sort')
 }
 
 // ─── 商店跳过 ───

@@ -9,6 +9,7 @@
     <!-- 当前关卡 -->
     <div class="sb-panel sb-blind">
       <div class="sb-panel-label">当前盲注</div>
+      <div class="sb-act-label">第 {{ currentBlind.act }} 幕 · 第 {{ roundIndex + 1 }}/{{ BLINDS.length }} 关</div>
       <div class="sb-blind-name">
         {{ currentBlind.icon }} {{ currentBlind.name }}
       </div>
@@ -68,24 +69,30 @@
     <div class="sb-panel sb-rounds">
       <div class="sb-panel-label">关卡进度</div>
       <div class="sb-rounds-list">
-        <div
-          v-for="(blind, i) in BLINDS"
-          :key="i"
-          class="sb-round-item"
-          :class="{
-            'current': i === roundIndex,
-            'done': i < roundIndex
-          }"
-        >
-          <span class="sb-round-icon">{{ blind.icon }}</span>
-          <span class="sb-round-name">{{ blind.name }}</span>
-          <span class="sb-round-target">{{ blind.target }}</span>
-        </div>
+        <template v-for="(blind, i) in BLINDS" :key="blind.name">
+          <div
+            v-if="i === 0 || BLINDS[i - 1].act !== blind.act"
+            class="sb-round-act"
+          >
+            第 {{ blind.act }} 幕
+          </div>
+          <div
+            class="sb-round-item"
+            :class="{
+              'current': i === roundIndex,
+              'done': i < roundIndex
+            }"
+          >
+            <span class="sb-round-icon">{{ blind.icon }}</span>
+            <span class="sb-round-name">{{ blind.name }}</span>
+            <span class="sb-round-target">{{ blind.target }}</span>
+          </div>
+        </template>
       </div>
     </div>
 
     <!-- 版本 -->
-    <div class="sb-version">v0.1.0 · Joker Game</div>
+    <div class="sb-version">v0.2.0 · Joker Game</div>
   </aside>
 </template>
 
@@ -164,6 +171,13 @@ defineProps({
   font-size: 18px;
   font-weight: 800;
   color: #fff;
+}
+
+.sb-act-label {
+  font-size: 11px;
+  color: #c084fc;
+  margin-bottom: 4px;
+  font-weight: 700;
 }
 
 .sb-target {
@@ -308,6 +322,14 @@ defineProps({
   display: flex;
   flex-direction: column;
   gap: 6px;
+}
+
+.sb-round-act {
+  margin-top: 2px;
+  color: rgba(255, 255, 255, 0.35);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1px;
 }
 
 .sb-round-item {

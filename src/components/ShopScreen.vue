@@ -8,7 +8,9 @@
       </div>
     </div>
 
-    <div class="shop-subtitle">{{ nextBlind.icon }} 下一关：{{ nextBlind.name }}（目标 {{ nextBlind.target }}）</div>
+    <div class="shop-subtitle">
+      第 {{ nextBlind.act }} 幕 · {{ nextBlind.icon }} 下一关 {{ nextBlind.name }}（目标 {{ nextBlind.target }}）
+    </div>
 
     <!-- AI 建议 -->
     <div v-if="aiSuggestion" class="shop-ai-hint">
@@ -46,6 +48,13 @@
     </div>
 
     <div class="shop-actions">
+      <button
+        class="px-btn btn-reroll"
+        :disabled="!canReroll"
+        @click="onReroll"
+      >
+        🔄 重新进货 ${{ rerollCost }}
+      </button>
       <button class="px-btn btn-skip" @click="onSkip">
         跳过 →
       </button>
@@ -64,11 +73,13 @@ const props = defineProps({
   money: { type: Number, required: true },
   jokerCount: { type: Number, required: true },
   nextBlind: { type: Object, required: true },
+  rerollCost: { type: Number, required: true },
 })
 
-const emit = defineEmits(['buy', 'skip'])
+const emit = defineEmits(['buy', 'reroll', 'skip'])
 
 const jokersFull = computed(() => props.jokerCount >= 5)
+const canReroll = computed(() => props.money >= props.rerollCost)
 
 const aiSuggestion = computed(() => {
   const available = props.shopItems.filter(item => !props.soldItems.has(item.id))
@@ -115,6 +126,10 @@ function onBuy(item) {
 function onSkip() {
   playSfx('skip')
   emit('skip')
+}
+
+function onReroll() {
+  if (canReroll.value) emit('reroll')
 }
 </script>
 
@@ -294,5 +309,13 @@ function onSkip() {
 /* 操作区 */
 .shop-actions {
   margin-top: 8px;
+  display: flex;
+  gap: 12px;
+}
+
+.btn-reroll {
+  background: transparent;
+  color: #c084fc;
+  border-color: rgba(192, 132, 252, 0.55);
 }
 </style>

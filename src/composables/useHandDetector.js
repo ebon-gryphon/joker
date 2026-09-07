@@ -88,6 +88,28 @@ export function applyJoker(joker, cards, hand, chips, mult) {
         if (c.rank === 'A') mult += 4
       }
       break
+    case 'half_joker':
+      // 三张或更少的精简牌型 +8倍率
+      if (cards.length <= 3) mult += 8
+      break
+    case 'even_steven':
+      // 每张偶数点数牌 +2倍率
+      for (const c of cards) {
+        if (['2', '4', '6', '8', '10'].includes(c.rank)) mult += 2
+      }
+      break
+    case 'odd_todd':
+      // A视作奇数，每张奇数点数牌 +2倍率
+      for (const c of cards) {
+        if (['A', '3', '5', '7', '9'].includes(c.rank)) mult += 2
+      }
+      break
+    case 'smiley_face':
+      // 每张人头牌 +3倍率
+      for (const c of cards) {
+        if (['J', 'Q', 'K'].includes(c.rank)) mult += 3
+      }
+      break
     case 'heart_collector':
       // 含♥时 倍率×4
       if (cards.some(c => c.suit === '♥')) mult *= 4
@@ -99,6 +121,14 @@ export function applyJoker(joker, cards, hand, chips, mult) {
     case 'royal_face':
       // 含J/Q/K时 倍率×10
       if (cards.some(c => ['J','Q','K'].includes(c.rank))) mult *= 10
+      break
+    case 'pair_engine':
+      // 对子、两对、三条、葫芦和四条都能启动引擎
+      if (['对子', '两对', '三条', '葫芦', '四条'].includes(hand.name)) chips += 40
+      break
+    case 'flush_flag':
+      // 同花路线获得固定筹码
+      if (['同花', '同花顺'].includes(hand.name)) chips += 60
       break
     case 'straight_flush_master':
       // 打出同花顺时 +50倍率

@@ -27,20 +27,31 @@ function shuffle(arr) {
 
 // 关卡配置
 export const BLINDS = [
-  { name: '小盲注', target: 300, icon: '🔵', color: '#4a6bff' },
-  { name: '中盲注', target: 500, icon: '🟡', color: '#ffc857' },
-  { name: '大盲注', target: 800, icon: '🔴', color: '#ff3344' },
+  { act: 1, name: '小盲注', target: 300, icon: '🔵', color: '#4a6bff' },
+  { act: 1, name: '中盲注', target: 500, icon: '🟡', color: '#ffc857' },
+  { act: 1, name: '大盲注', target: 800, icon: '🔴', color: '#ff3344' },
+  { act: 2, name: '暮色盲注', target: 1200, icon: '🟣', color: '#a855f7' },
+  { act: 2, name: '幻影盲注', target: 2000, icon: '🌙', color: '#38bdf8' },
+  { act: 2, name: '终局盲注', target: 3200, icon: '👑', color: '#f97316' },
 ]
 
 // 全部 Joker 候选库
 export const JOKER_POOL = [
   { id: 'jester',               name: '小丑',       rarity: 'common',    price: 3, art: '🃏', desc: '每手 +4 倍率' },
   { id: 'scholar',              name: '学者',       rarity: 'common',    price: 3, art: '📖', desc: '打出的牌每张 A：+4 倍率' },
+  { id: 'half_joker',           name: '半张小丑',   rarity: 'common',    price: 4, art: '🌓', desc: '出牌不超过 3 张时 +8 倍率' },
+  { id: 'even_steven',          name: '偶数史蒂文', rarity: 'common',    price: 4, art: '✌️', desc: '每张偶数牌 +2 倍率' },
+  { id: 'odd_todd',             name: '奇数托德',   rarity: 'common',    price: 4, art: '🎲', desc: '每张奇数牌 +2 倍率' },
+  { id: 'smiley_face',          name: '笑脸',       rarity: 'common',    price: 4, art: '🙂', desc: '每张 J/Q/K +3 倍率' },
   { id: 'heart_collector',      name: '红心收藏家', rarity: 'rare',      price: 5, art: '❤️', desc: '含 ♥ 时，倍率 ×4' },
   { id: 'club_lover',           name: '梅花爱好者', rarity: 'rare',      price: 5, art: '♣',  desc: '含 ♣ 时，倍率 ×4' },
   { id: 'royal_face',           name: '皇家头牌',   rarity: 'rare',      price: 5, art: '👑', desc: '含 J/Q/K 时，倍率 ×10' },
+  { id: 'pair_engine',          name: '对子引擎',   rarity: 'rare',      price: 5, art: '⚙️', desc: '对子或更高同点牌型 +40 筹码' },
+  { id: 'flush_flag',           name: '同花旗手',   rarity: 'rare',      price: 6, art: '🚩', desc: '同花或同花顺 +60 筹码' },
   { id: 'straight_flush_master',name: '同花顺大师', rarity: 'legendary', price: 8, art: '🔥', desc: '打出同花顺时 +50 倍率' },
 ]
+
+export const SHOP_REROLL_COST = 2
 
 export function useGameState() {
   // 游戏阶段: playing | shop | won | lost
@@ -113,8 +124,8 @@ export function useGameState() {
     hand.value = []
     selectedCards.value = []
     playedCards.value = []
-    handsLeft.value = 4
-    discardsLeft.value = 3
+    handsLeft.value = currentBlind.value.hands ?? 4
+    discardsLeft.value = currentBlind.value.discards ?? 3
     blindScore.value = 0
     isScoring.value = false
     drawCards(8)
@@ -191,8 +202,8 @@ export function useGameState() {
     // 检查胜利/失败/继续
     if (blindScore.value >= currentBlind.value.target) {
       // 胜利
-      if (roundIndex.value === 2) {
-        // 大盲注通关 → won
+      if (roundIndex.value === BLINDS.length - 1) {
+        // 最终盲注通关 → won
         phase.value = 'won'
       } else {
         // 进商店
@@ -245,6 +256,15 @@ export function useGameState() {
     return true
   }
 
+  function rerollShop() {
+    if (phase.value !== 'shop') return false
+    if (money.value < SHOP_REROLL_COST) return false
+
+    money.value -= SHOP_REROLL_COST
+    generateShop()
+    return true
+  }
+
   function skipShop() {
     roundIndex.value++
     initRound()
@@ -292,6 +312,7 @@ export function useGameState() {
     discardCards,
     generateShop,
     buyJoker,
+    rerollShop,
     skipShop,
     restart,
     drawCards,
