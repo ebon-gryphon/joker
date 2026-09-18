@@ -1,5 +1,6 @@
 import { ref, computed } from 'vue'
 import { detectHand, calcScore } from './useHandDetector.js'
+import { selectShopItems } from './shopSelection.js'
 
 // 52张牌堆
 const SUITS = ['♠', '♥', '♦', '♣']
@@ -236,11 +237,9 @@ export function useGameState() {
   }
 
   function generateShop() {
-    // 从候选库中随机抽3张不重复
+    // 首次进店和刷新均使用刚通关关卡的稀有度权重。
     const ownedIds = new Set(jokers.value.map(j => j.id))
-    const available = JOKER_POOL.filter(j => !ownedIds.has(j.id))
-    const shuffled = shuffle(available)
-    shopItems.value = shuffled.slice(0, 3)
+    shopItems.value = selectShopItems(JOKER_POOL, ownedIds, roundIndex.value)
     soldItems.value = new Set()
   }
 
