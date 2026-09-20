@@ -2,6 +2,8 @@
   <div class="joker-area">
     <div class="joker-area-header">
       <span class="joker-title">JOKERS · {{ jokers.length }}/5</span>
+      <button class="catalog-link" @click="$emit('catalog')">查看全部 {{ JOKER_POOL.length }} 张牌 ↗</button>
+      <span class="order-hint">从左到右结算</span>
     </div>
     <div class="joker-slots">
       <div
@@ -24,6 +26,11 @@
             </div>
             <div class="joker-name">{{ jokers[i - 1].name }}</div>
             <div class="joker-desc">{{ jokers[i - 1].desc }}</div>
+            <div v-if="jokerStatus(jokers[i - 1])" class="growth-status">{{ jokerStatus(jokers[i - 1]) }}</div>
+            <div class="move-controls">
+              <button :disabled="disabled || i === 1" :aria-label="`左移${jokers[i - 1].name}`" @click="$emit('move', i - 1, -1)">←</button>
+              <button :disabled="disabled || i === jokers.length" :aria-label="`右移${jokers[i - 1].name}`" @click="$emit('move', i - 1, 1)">→</button>
+            </div>
             <div class="joker-rarity-badge" :class="'badge-' + jokers[i - 1].rarity">
               {{ rarityLabel(jokers[i - 1].rarity) }}
             </div>
@@ -41,7 +48,10 @@
 </template>
 
 <script setup>
+import { JOKER_POOL, jokerStatus } from '../composables/jokerCatalog.js'
+defineEmits(['move', 'catalog'])
 defineProps({
+  disabled: Boolean,
   jokers: { type: Array, required: true },
 })
 
@@ -52,6 +62,13 @@ function rarityLabel(rarity) {
 </script>
 
 <style scoped>
+.catalog-link { border: 0; background: transparent; color: #a8caff; cursor: pointer; font-size: 12px; }
+.order-hint { font-size: 11px; color: #a9b9d7; }
+.growth-status { font-size: 10px; color: #9ce6ac; margin-top: 3px; }
+.move-controls { display: flex; gap: 12px; margin-top: 5px; }
+.move-controls button { background: #ffffff12; border: 1px solid #ffffff33; border-radius: 4px; color: white; cursor: pointer; padding: 1px 12px; }
+.move-controls button:disabled { opacity: .25; cursor: default; }
+
 .joker-area {
   height: 100%;
   display: flex;
@@ -62,7 +79,8 @@ function rarityLabel(rarity) {
 }
 
 .joker-area-header {
-  margin-bottom: 10px;
+  margin-bottom: 8px;
+  display: flex; align-items: center; gap: 16px;
 }
 
 .joker-title {
@@ -75,6 +93,7 @@ function rarityLabel(rarity) {
 .joker-slots {
   display: flex;
   gap: 12px;
+  overflow-x: auto;
   align-items: center;
   flex: 1;
 }
@@ -82,7 +101,7 @@ function rarityLabel(rarity) {
 /* Joker 卡片 */
 .joker-card {
   width: 140px;
-  height: 200px;
+  height: 184px;
   border-radius: 12px;
   background: linear-gradient(145deg, #1e2d60, #2a3d80);
   display: flex;
@@ -129,8 +148,8 @@ function rarityLabel(rarity) {
 }
 
 .joker-card-back {
-  width: 72px;
-  height: 100px;
+  width: 42px;
+  height: 56px;
   border-radius: 8px;
   position: relative;
   overflow: hidden;
@@ -200,7 +219,7 @@ function rarityLabel(rarity) {
 /* 空槽 */
 .joker-slot {
   width: 140px;
-  height: 200px;
+  height: 184px;
   border-radius: 12px;
   flex-shrink: 0;
 }

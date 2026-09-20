@@ -24,6 +24,9 @@
         <!-- 第1段: Joker区 (230px) -->
         <JokerArea
           :jokers="jokers"
+          :disabled="isScoring || aiThinking"
+          @move="moveJoker"
+          @catalog="showCatalog = true"
           ref="jokerAreaRef"
         />
 
@@ -62,6 +65,11 @@
       :soldItems="soldItems"
       :money="money"
       :jokerCount="jokers.length"
+      :jokers="jokers"
+      :lastReward="lastReward"
+      @sell="sellJoker"
+      @move="moveJoker"
+      @catalog="showCatalog = true"
       :nextBlind="BLINDS[roundIndex + 1] || BLINDS[roundIndex]"
       :rerollCost="SHOP_REROLL_COST"
       @buy="handleBuy"
@@ -80,6 +88,8 @@
       @restart="restart"
     />
 
+    <JokerCatalog v-if="showCatalog" :jokers="jokers" @close="showCatalog = false" />
+
     <!-- 设置弹窗 -->
     <SettingsModal
       v-if="showSettings"
@@ -96,6 +106,7 @@ import gsap from 'gsap'
 import { initAudio, playSfx, startAiLoop, stopAiLoop, playBgm, applyAudioSettings } from './composables/useAudio.js'
 
 import SideBar from './components/SideBar.vue'
+import JokerCatalog from './components/JokerCatalog.vue'
 import JokerArea from './components/JokerArea.vue'
 import PlayArea from './components/PlayArea.vue'
 import HandArea from './components/HandArea.vue'
@@ -104,12 +115,12 @@ import EndScreen from './components/EndScreen.vue'
 import SettingsModal from './components/SettingsModal.vue'
 
 import { useGameState, BLINDS, SHOP_REROLL_COST } from './composables/useGameState.js'
-import { applyJoker } from './composables/useHandDetector.js'
 import { animSpeed } from './composables/useAnimations.js'
 import { findBestPlay } from './composables/useAI.js'
 
 // ─── 游戏状态 ───
 const {
+  scoreContext, lastReward, moveJoker, sellJoker,
   phase, roundIndex, blindScore, money, handsLeft, discardsLeft,
   deck, deckCount, hand, selectedCards, playedCards, jokers,
   currentHandType, isScoring, shopItems, soldItems,
@@ -121,6 +132,7 @@ const {
 
 // ─── UI 状态 ───
 const showSettings = ref(false)
+const showCatalog = ref(false)
 const aiThinking = ref(false)
 const displayBlindScore = ref(0) // 动画中的显示值
 
@@ -257,7 +269,7 @@ async function handlePlay() {
       const jokerEl = jokerEls[j]?.$el || jokerEls[j]
 
       // 检查该 Joker 是否对这手牌有效
-      const { mult: newMult, chips: newChips } = applyJokerPreview(joker, pCards, handType, runningChips, runningMult)
+      const { mult: newMult, chips: newChips } = result.steps[j]
       const multDiff = newMult - runningMult
       const chipsDiff = newChips - runningChips
 
@@ -282,13 +294,7 @@ async function handlePlay() {
         const targetRect = targetBlockEl.getBoundingClientRect()
 
         const span = document.createElement('div')
-        if (isChipEffect) {
-          span.textContent = `+${chipsDiff} Chips`
-        } else if (multDiff > 0) {
-          span.textContent = joker.id === 'heart_collector' || joker.id === 'club_lover' || joker.id === 'royal_face'
-            ? `×${newMult / runningMult}`
-            : `+${multDiff} Mult`
-        }
+        span.textContent = result.steps[j].label
         const effectColor = isChipEffect ? '#4dd6ff' : '#ff8844'
         span.style.cssText = `
           position: fixed;
@@ -372,11 +378,6 @@ async function handlePlay() {
   }
 }
 
-// 应用 Joker 效果（用于动画预览）
-function applyJokerPreview(joker, cards, hand, chips, mult) {
-  return applyJoker(joker, cards, hand, chips, mult)
-}
-
 function cardValue(rank) {
   if (rank === 'A') return 11
   if (['J','Q','K'].includes(rank)) return 10
@@ -429,7 +430,7 @@ async function handleAIPlay() {
   await delay(800)
   stopAiLoop()
 
-  const bestCombo = findBestPlay(hand.value, jokers.value)
+  const bestCombo = findBestPlay(hand.value, jokers.value, scoreContext.value)
   if (bestCombo.length > 0) {
     // 清除当前选中（通过逐个取消选择）
     const currentSelected = [...selectedCards.value]

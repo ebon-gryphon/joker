@@ -19,14 +19,14 @@ function combinations(arr, k) {
 }
 
 // AI 枚举所有 C(8,1)~C(8,5) 共218种组合，选最高分
-export function findBestPlay(hand, jokers) {
+export function findBestPlay(hand, jokers, context = {}) {
   let bestScore = -1
   let bestCombo = []
 
   for (let k = 1; k <= 5; k++) {
     const combos = combinations(hand, k)
     for (const combo of combos) {
-      const { score } = calcScore(combo, jokers)
+      const { score } = calcScore(combo, jokers, context)
       if (score > bestScore) {
         bestScore = score
         bestCombo = combo

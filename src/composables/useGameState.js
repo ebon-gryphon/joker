@@ -1,5 +1,5 @@
 import { ref, computed } from 'vue'
-import { detectHand, calcScore } from './useHandDetector.js'
+import { calcScore } from './useHandDetector.js'
 import { selectShopItems } from './shopSelection.js'
 
 // 52张牌堆
@@ -36,21 +36,8 @@ export const BLINDS = [
   { act: 2, name: '终局盲注', target: 3200, icon: '👑', color: '#f97316' },
 ]
 
-// 全部 Joker 候选库
-export const JOKER_POOL = [
-  { id: 'jester',               name: '小丑',       rarity: 'common',    price: 3, art: '🃏', desc: '每手 +4 倍率' },
-  { id: 'scholar',              name: '学者',       rarity: 'common',    price: 3, art: '📖', desc: '打出的牌每张 A：+4 倍率' },
-  { id: 'half_joker',           name: '半张小丑',   rarity: 'common',    price: 4, art: '🌓', desc: '出牌不超过 3 张时 +8 倍率' },
-  { id: 'even_steven',          name: '偶数史蒂文', rarity: 'common',    price: 4, art: '✌️', desc: '每张偶数牌 +2 倍率' },
-  { id: 'odd_todd',             name: '奇数托德',   rarity: 'common',    price: 4, art: '🎲', desc: '每张奇数牌 +2 倍率' },
-  { id: 'smiley_face',          name: '笑脸',       rarity: 'common',    price: 4, art: '🙂', desc: '每张 J/Q/K +3 倍率' },
-  { id: 'heart_collector',      name: '红心收藏家', rarity: 'rare',      price: 5, art: '❤️', desc: '含 ♥ 时，倍率 ×4' },
-  { id: 'club_lover',           name: '梅花爱好者', rarity: 'rare',      price: 5, art: '♣',  desc: '含 ♣ 时，倍率 ×4' },
-  { id: 'royal_face',           name: '皇家头牌',   rarity: 'rare',      price: 5, art: '👑', desc: '含 J/Q/K 时，倍率 ×10' },
-  { id: 'pair_engine',          name: '对子引擎',   rarity: 'rare',      price: 5, art: '⚙️', desc: '对子或更高同点牌型 +40 筹码' },
-  { id: 'flush_flag',           name: '同花旗手',   rarity: 'rare',      price: 6, art: '🚩', desc: '同花或同花顺 +60 筹码' },
-  { id: 'straight_flush_master',name: '同花顺大师', rarity: 'legendary', price: 8, art: '🔥', desc: '打出同花顺时 +50 倍率' },
-]
+export { JOKER_POOL } from './jokerCatalog.js'
+import { JOKER_POOL, advanceJokers } from './jokerCatalog.js'
 
 export const SHOP_REROLL_COST = 2
 
@@ -111,11 +98,14 @@ export function useGameState() {
   // 选中牌数量
   const selectedCount = computed(() => selectedCards.value.length)
 
+  const scoreContext = computed(() => ({ money: money.value, handsLeft: handsLeft.value, discardsLeft: discardsLeft.value }))
+  const lastReward = ref(null)
+
   // 预览得分
   const previewScore = computed(() => {
     if (selectedCards.value.length === 0) return null
     const sel = selectedCards.value.map(id => hand.value.find(c => c.id === id)).filter(Boolean)
-    return calcScore(sel, jokers.value)
+    return calcScore(sel, jokers.value, scoreContext.value)
   })
 
   function initRound() {
@@ -170,6 +160,7 @@ export function useGameState() {
 
   // 出牌（返回动画所需数据）
   function playHand() {
+    if (phase.value !== 'playing') return null
     if (isScoring.value) return null
     if (selectedCards.value.length === 0) return null
     if (handsLeft.value <= 0) return null
@@ -178,8 +169,9 @@ export function useGameState() {
       .map(id => hand.value.find(c => c.id === id))
       .filter(Boolean)
 
-    const result = calcScore(selCards, jokers.value)
+    const result = calcScore(selCards, jokers.value, scoreContext.value)
     result.playedCards = selCards
+    jokers.value = advanceJokers(jokers.value, 'play', selCards, result.hand)
 
     // 从手牌移除
     hand.value = hand.value.filter(c => !selectedCards.value.includes(c.id))
@@ -193,6 +185,7 @@ export function useGameState() {
   }
 
   function finishScoring(scoreDelta) {
+    if (phase.value !== 'playing') return []
     blindScore.value += scoreDelta
     isScoring.value = false
 
@@ -202,14 +195,16 @@ export function useGameState() {
 
     // 检查胜利/失败/继续
     if (blindScore.value >= currentBlind.value.target) {
+      const bonus = jokers.value.some(j => j.id === 'golden_joker') ? 3 : 0
+      const reward = 5 + handsLeft.value
+      lastReward.value = { base: reward, bonus, total: reward + bonus }
+      money.value += reward + bonus
       // 胜利
       if (roundIndex.value === BLINDS.length - 1) {
         // 最终盲注通关 → won
         phase.value = 'won'
       } else {
         // 进商店
-        const reward = 5 + handsLeft.value * 1
-        money.value += reward
         generateShop()
         phase.value = 'shop'
       }
@@ -222,6 +217,7 @@ export function useGameState() {
   }
 
   function discardCards() {
+    if (phase.value !== 'playing') return []
     if (isScoring.value) return []
     if (discardsLeft.value <= 0) return []
     if (selectedCards.value.length === 0) return []
@@ -230,6 +226,8 @@ export function useGameState() {
     hand.value = hand.value.filter(c => !discarded.includes(c.id))
     selectedCards.value = []
     discardsLeft.value--
+    jokers.value = advanceJokers(jokers.value, 'discard')
+    if (jokers.value.some(j => j.id === 'rebate')) money.value++
 
     // 补牌
     const drawn = drawCards(discarded.length)
@@ -244,14 +242,34 @@ export function useGameState() {
   }
 
   function buyJoker(jokerId) {
+    if (phase.value !== 'shop' || soldItems.value.has(jokerId) || jokers.value.some(j => j.id === jokerId)) return false
     const item = shopItems.value.find(j => j.id === jokerId)
     if (!item) return false
     if (money.value < item.price) return false
     if (jokers.value.length >= 5) return false
 
     money.value -= item.price
-    jokers.value = [...jokers.value, item]
+    jokers.value = [...jokers.value, { ...item, progress: 0 }]
     soldItems.value = new Set([...soldItems.value, jokerId])
+    return true
+  }
+
+  function moveJoker(index, direction) {
+    if (isScoring.value || !['playing', 'shop'].includes(phase.value)) return false
+    const target = index + direction
+    if (![1, -1].includes(direction) || !jokers.value[index] || !jokers.value[target]) return false
+    const next = [...jokers.value]
+    ;[next[index], next[target]] = [next[target], next[index]]
+    jokers.value = next
+    return true
+  }
+
+  function sellJoker(id) {
+    if (phase.value !== 'shop') return false
+    const item = jokers.value.find(j => j.id === id)
+    if (!item) return false
+    money.value += Math.max(1, Math.floor(item.price / 2))
+    jokers.value = jokers.value.filter(j => j.id !== id)
     return true
   }
 
@@ -265,6 +283,7 @@ export function useGameState() {
   }
 
   function skipShop() {
+    if (phase.value !== 'shop') return
     roundIndex.value++
     initRound()
     phase.value = 'playing'
@@ -273,6 +292,7 @@ export function useGameState() {
   function restart() {
     roundIndex.value = 0
     money.value = 5
+    lastReward.value = null
     jokers.value = []
     soldItems.value = new Set()
     initRound()
@@ -283,6 +303,7 @@ export function useGameState() {
   initRound()
 
   return {
+    scoreContext, lastReward, moveJoker, sellJoker,
     phase,
     roundIndex,
     blindScore,

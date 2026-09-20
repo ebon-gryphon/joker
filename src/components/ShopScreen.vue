@@ -12,6 +12,8 @@
       第 {{ nextBlind.act }} 幕 · {{ nextBlind.icon }} 下一关 {{ nextBlind.name }}（目标 {{ nextBlind.target }}）
     </div>
 
+    <div v-if="lastReward" class="shop-subtitle">过关收入 ${{ lastReward.base }} + 小丑奖励 ${{ lastReward.bonus }} = ${{ lastReward.total }}</div>
+    <button class="px-btn catalog-button" @click="$emit('catalog')">浏览 {{ JOKER_POOL.length }} 张小丑牌图鉴 ↗</button>
     <!-- AI 建议 -->
     <div v-if="aiSuggestion" class="shop-ai-hint">
       🤖 AI 建议购买：<strong>{{ aiSuggestion.name }}</strong>
@@ -44,9 +46,18 @@
 
     <!-- Joker 槽满提示 -->
     <div v-if="jokersFull" class="shop-jokers-full">
-      ⚠️ Joker 槽已满（5/5），无法购买更多
+      Joker 槽已满（5/5），可出售下方已拥有的牌来腾出位置
     </div>
 
+    <section v-if="jokers.length" class="owned-section">
+      <p>我的组合 · 从左到右结算 · 出售返还半价（向下取整）</p>
+      <div class="owned-items">
+        <article v-for="(joker, index) in jokers" :key="joker.id" :title="joker.desc">
+          <strong>{{ joker.art }} {{ joker.name }}</strong><small>{{ jokerStatus(joker) || joker.desc }}</small>
+          <div><button :disabled="index === 0" :aria-label="`左移${joker.name}`" @click="$emit('move', index, -1)">←</button><button :disabled="index === jokers.length - 1" :aria-label="`右移${joker.name}`" @click="$emit('move', index, 1)">→</button><button @click="$emit('sell', joker.id)">出售 ${{ Math.max(1, Math.floor(joker.price / 2)) }}</button></div>
+        </article>
+      </div>
+    </section>
     <div class="shop-actions">
       <button
         class="px-btn btn-reroll"
@@ -64,10 +75,13 @@
 
 <script setup>
 import { computed } from 'vue'
+import { JOKER_POOL, jokerStatus } from '../composables/jokerCatalog.js'
 import { getShopSuggestion } from '../composables/useAI.js'
 import { playSfx } from '../composables/useAudio.js'
 
 const props = defineProps({
+  jokers: { type: Array, default: () => [] },
+  lastReward: { type: Object, default: null },
   shopItems: { type: Array, required: true },
   soldItems: { type: Object, required: true }, // Set
   money: { type: Number, required: true },
@@ -76,12 +90,13 @@ const props = defineProps({
   rerollCost: { type: Number, required: true },
 })
 
-const emit = defineEmits(['buy', 'reroll', 'skip'])
+const emit = defineEmits(['buy', 'reroll', 'skip', 'sell', 'move', 'catalog'])
 
 const jokersFull = computed(() => props.jokerCount >= 5)
 const canReroll = computed(() => props.money >= props.rerollCost)
 
 const aiSuggestion = computed(() => {
+  if (jokersFull.value) return null
   const available = props.shopItems.filter(item => !props.soldItems.has(item.id))
   return getShopSuggestion(available, props.money)
 })
@@ -134,6 +149,16 @@ function onReroll() {
 </script>
 
 <style scoped>
+.owned-section { width: min(850px, 100%); }
+.owned-section p { color: #adbedc; font-size: 12px; margin: 0 0 10px; }
+.owned-items { display: flex; flex-wrap: wrap; gap: 10px; }
+.owned-items article { flex: 1; min-width: 140px; padding: 10px; background: #ffffff09; border: 1px solid #ffffff22; border-radius: 8px; }
+.owned-items strong { font-size: 12px; color: white; }
+.owned-items small { display: block; font-size: 10px; color: #b2c7df; min-height: 30px; margin: 8px 0; }
+.owned-items button { color: #ffd17b; background: transparent; border: 1px solid #ffffff33; border-radius: 4px; margin-right: 4px; padding: 4px; cursor: pointer; }
+.owned-items button:disabled { opacity: .25; }
+.catalog-button { font-size: 12px; min-height: 32px; padding: 8px 16px; }
+
 .shop-screen {
   position: fixed;
   inset: 0;
@@ -141,8 +166,9 @@ function onReroll() {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 24px;
+  justify-content: flex-start;
+  overflow-y: auto;
+  gap: 16px;
   z-index: 100;
   padding: 32px;
 }

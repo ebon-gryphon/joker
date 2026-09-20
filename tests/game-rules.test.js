@@ -20,8 +20,8 @@ test('the extended run has two acts and steadily rising targets', () => {
   assert.ok(BLINDS.every((blind, index) => index === 0 || blind.target > BLINDS[index - 1].target))
 })
 
-test('the expanded shop has twelve unique jokers and a reroll cost', () => {
-  assert.equal(JOKER_POOL.length, 12)
+test('the expanded shop has thirty-two unique jokers and a reroll cost', () => {
+  assert.equal(JOKER_POOL.length, 32)
   assert.equal(new Set(JOKER_POOL.map(item => item.id)).size, JOKER_POOL.length)
   assert.equal(SHOP_REROLL_COST, 2)
 })

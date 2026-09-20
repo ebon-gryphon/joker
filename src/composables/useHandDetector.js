@@ -1,3 +1,6 @@
+import { JOKER_POOL, SCORE_DEFAULTS } from './jokerCatalog.js'
+const definitions = new Map(JOKER_POOL.map(j => [j.id, j]))
+
 // 牌型识别与基础值
 export const HAND_TYPES = {
   STRAIGHT_FLUSH:  { name: '同花顺', chips: 100, mult: 8 },
@@ -59,81 +62,30 @@ export function detectHand(cards) {
 }
 
 // 计算得分（含Joker效果）
-export function calcScore(cards, jokers) {
+export function calcScore(cards, jokers, context = {}) {
   const hand = detectHand(cards)
   if (!hand) return { chips: 0, mult: 0, score: 0, hand: null }
 
   let chips = hand.chips + cards.reduce((s, c) => s + cardValue(c.rank), 0)
   let mult = hand.mult
 
+  const steps = []
   // 按顺序应用 Joker 效果
   for (const joker of (jokers || [])) {
-    const effect = applyJoker(joker, cards, hand, chips, mult)
+    const effect = applyJoker(joker, cards, hand, chips, mult, context)
+    steps.push({ id: joker.id, ...effect })
     chips = effect.chips
     mult = effect.mult
   }
 
-  return { chips, mult, score: chips * mult, hand }
+  return { chips, mult, score: chips * mult, hand, steps }
 }
 
-export function applyJoker(joker, cards, hand, chips, mult) {
-  switch (joker.id) {
-    case 'jester':
-      // 每手 +4 倍率
-      mult += 4
-      break
-    case 'scholar':
-      // 每张A +4倍率
-      for (const c of cards) {
-        if (c.rank === 'A') mult += 4
-      }
-      break
-    case 'half_joker':
-      // 三张或更少的精简牌型 +8倍率
-      if (cards.length <= 3) mult += 8
-      break
-    case 'even_steven':
-      // 每张偶数点数牌 +2倍率
-      for (const c of cards) {
-        if (['2', '4', '6', '8', '10'].includes(c.rank)) mult += 2
-      }
-      break
-    case 'odd_todd':
-      // A视作奇数，每张奇数点数牌 +2倍率
-      for (const c of cards) {
-        if (['A', '3', '5', '7', '9'].includes(c.rank)) mult += 2
-      }
-      break
-    case 'smiley_face':
-      // 每张人头牌 +3倍率
-      for (const c of cards) {
-        if (['J', 'Q', 'K'].includes(c.rank)) mult += 3
-      }
-      break
-    case 'heart_collector':
-      // 含♥时 倍率×4
-      if (cards.some(c => c.suit === '♥')) mult *= 4
-      break
-    case 'club_lover':
-      // 含♣时 倍率×4
-      if (cards.some(c => c.suit === '♣')) mult *= 4
-      break
-    case 'royal_face':
-      // 含J/Q/K时 倍率×10
-      if (cards.some(c => ['J','Q','K'].includes(c.rank))) mult *= 10
-      break
-    case 'pair_engine':
-      // 对子、两对、三条、葫芦和四条都能启动引擎
-      if (['对子', '两对', '三条', '葫芦', '四条'].includes(hand.name)) chips += 40
-      break
-    case 'flush_flag':
-      // 同花路线获得固定筹码
-      if (['同花', '同花顺'].includes(hand.name)) chips += 60
-      break
-    case 'straight_flush_master':
-      // 打出同花顺时 +50倍率
-      if (hand.name === '同花顺') mult += 50
-      break
-  }
-  return { chips, mult }
+export function applyJoker(joker, cards, hand, chips, mult, context = {}) {
+  const effect = definitions.get(joker.id)?.effect(cards, hand, { ...SCORE_DEFAULTS, ...context }, joker) || {}
+  const labels = []
+  if (effect.chips) labels.push(`+${effect.chips} 筹码`)
+  if (effect.mult) labels.push(`+${effect.mult} 倍率`)
+  if (effect.times && effect.times !== 1) labels.push(`×${effect.times} 倍率`)
+  return { chips: chips + (effect.chips || 0), mult: (mult + (effect.mult || 0)) * (effect.times || 1), label: labels.join(' · ') }
 }
