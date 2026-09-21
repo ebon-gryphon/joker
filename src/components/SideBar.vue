@@ -92,7 +92,7 @@
     </div>
 
     <!-- 版本 -->
-    <div class="sb-version">v0.2.0 · Joker Game</div>
+    <div class="sb-version">v0.3.0 · Joker Game</div>
   </aside>
 </template>
 

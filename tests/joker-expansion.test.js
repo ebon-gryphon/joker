@@ -9,23 +9,23 @@ const cards = (ranks, suits = []) => ranks.map((rank, id) => ({ id, rank, suit: 
 const high = cards(['4', '10', 'K'], ['♠', '♦', '♣'])
 const straight = cards(['2','3','4','5','6'])
 const examples = [
-  ['blue_joker', high, {}, 30, 0],
-  ['diamond_miner', high, {}, 12, 0],
-  ['spade_guard', high, {}, 0, 3],
-  ['jolly_joker', cards(['8','8']), {}, 0, 6],
+  ['blue_joker', high, {}, 20, 0],
+  ['diamond_miner', high, {}, 8, 0],
+  ['spade_guard', high, {}, 0, 2],
+  ['jolly_joker', cards(['8','8']), {}, 0, 4],
   ['trio', cards(['8','8','8']), {}, 0, 3],
-  ['double_act', cards(['2','2','3','3']), {}, 0, 8],
-  ['straight_rail', straight, {}, 50, 0],
-  ['crazy_joker', straight, {}, 0, 10],
-  ['droll_joker', straight, {}, 0, 8],
-  ['banner', high, { discardsLeft: 2 }, 24, 0],
-  ['bull', high, { money: 100 }, 60, 0],
+  ['double_act', cards(['2','2','3','3']), {}, 0, 5],
+  ['straight_rail', straight, {}, 35, 0],
+  ['crazy_joker', straight, {}, 0, 6],
+  ['droll_joker', straight, {}, 0, 5],
+  ['banner', high, { discardsLeft: 2 }, 16, 0],
+  ['bull', high, { money: 100 }, 40, 0],
   ['empty_pockets', high, { discardsLeft: 0 }, 0, 1],
-  ['last_hand', high, { handsLeft: 1 }, 0, 2],
-  ['fibonacci', cards(['A','2','3','5','8']), {}, 0, 15],
-  ['walkie_talkie', high, {}, 20, 4],
-  ['runner', straight, {}, 15, 0],
-  ['square_joker', cards(['2','3','4','5']), {}, 8, 0],
+  ['last_hand', high, { handsLeft: 1 }, 0, 1],
+  ['fibonacci', cards(['A','2','3','5','8']), {}, 0, 10],
+  ['walkie_talkie', high, {}, 12, 2],
+  ['runner', straight, {}, 8, 0],
+  ['square_joker', cards(['2','3','4','5']), {}, 4, 0],
   ['green_joker', high, {}, 0, 1],
   ['golden_joker', high, {}, 0, 0],
   ['rebate', high, {}, 0, 0],
@@ -51,8 +51,8 @@ test('rebalanced suit and face cards need three matches; ordering matters', () =
   const base = calcScore(hand, [])
   assert.equal(calcScore(hand, [joker('royal_face')]).mult, base.mult * 2)
   assert.equal(calcScore(hand, [joker('heart_collector')]).mult, base.mult * 2)
-  assert.equal(calcScore(hand, [joker('jester'), joker('royal_face')]).mult, 10)
-  assert.equal(calcScore(hand, [joker('royal_face'), joker('jester')]).mult, 6)
+  assert.equal(calcScore(hand, [joker('jester'), joker('royal_face')]).mult, 8)
+  assert.equal(calcScore(hand, [joker('royal_face'), joker('jester')]).mult, 5)
 })
 
 test('previews and AI never mutate growth, actual play grows once, across rounds', () => {
@@ -65,15 +65,15 @@ test('previews and AI never mutate growth, actual play grows once, across rounds
   assert.deepEqual(game.jokers.value.map(j => j.progress), [0,0])
   const result = game.playHand()
   assert.equal(result.score, preview)
-  assert.deepEqual(game.jokers.value.map(j => j.progress), [1,8])
+  assert.deepEqual(game.jokers.value.map(j => j.progress), [1,4])
   assert.equal(result.steps.at(-1).chips * result.steps.at(-1).mult, preview)
   assert.equal(game.playHand(), null)
   game.finishScoring(300)
   game.skipShop()
-  assert.deepEqual(game.jokers.value.map(j => j.progress), [1,8])
+  assert.deepEqual(game.jokers.value.map(j => j.progress), [1,4])
   game.selectedCards.value = [game.hand.value[0].id]
   game.discardCards()
-  assert.deepEqual(game.jokers.value.map(j => j.progress), [0,8])
+  assert.deepEqual(game.jokers.value.map(j => j.progress), [0,4])
   game.restart()
   assert.equal(game.jokers.value.length, 0)
   assert.ok(JOKER_POOL.every(j => j.progress === undefined))
@@ -82,9 +82,9 @@ test('previews and AI never mutate growth, actual play grows once, across rounds
 test('runner adds on qualifying hands and keeps its bonus on later high cards', () => {
   const result = calcScore(straight, [])
   const grown = advanceJokers([joker('runner')], 'play', straight, result.hand)
-  assert.equal(grown[0].progress, 15)
-  assert.equal(calcScore(high, grown).chips - calcScore(high, []).chips, 15)
-  assert.equal(calcScore(straight, grown).chips - result.chips, 30)
+  assert.equal(grown[0].progress, 8)
+  assert.equal(calcScore(high, grown).chips - calcScore(high, []).chips, 8)
+  assert.equal(calcScore(straight, grown).chips - result.chips, 16)
 })
 
 test('economy rewards require a valid discard or a cleared round', () => {
@@ -97,8 +97,8 @@ test('economy rewards require a valid discard or a cleared round', () => {
   assert.equal(game.money.value, 6)
   game.handsLeft.value = 2
   game.finishScoring(300)
-  assert.equal(game.money.value, 16)
-  assert.deepEqual(game.lastReward.value, { base: 7, bonus: 3, total: 10 })
+  assert.equal(game.money.value, 15)
+  assert.deepEqual(game.lastReward.value, { base: 7, bonus: 2, total: 9 })
 })
 
 test('shop prevents duplicate buys, supports selling and bounded reordering', () => {

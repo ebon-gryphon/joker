@@ -36,7 +36,7 @@ test('owned cards are excluded and exhausted categories redistribute without unl
 
   const allNonLegendary = new Set(JOKER_POOL.filter(item => item.rarity !== 'legendary').map(item => item.id))
   assert.deepEqual(selectShopItems(JOKER_POOL, allNonLegendary, 0), [])
-  assert.equal(selectShopItems(JOKER_POOL, allNonLegendary, 4).length, 1)
+  assert.equal(selectShopItems(JOKER_POOL, allNonLegendary, 4).length, 3)
   assert.deepEqual(selectShopItems(JOKER_POOL, new Set(JOKER_POOL.map(item => item.id)), 4), [])
 })
 

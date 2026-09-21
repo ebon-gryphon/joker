@@ -1,10 +1,16 @@
-// 按刚通关的关卡索引配置；第六关通关后直接结算，没有商店。
+// 按刚通关的关卡索引配置；第十二关通关后直接结算，没有商店。
 export const SHOP_RARITY_WEIGHTS = [
   { common: 90, rare: 10, legendary: 0 },
   { common: 85, rare: 15, legendary: 0 },
-  { common: 75, rare: 23, legendary: 2 },
-  { common: 65, rare: 30, legendary: 5 },
-  { common: 55, rare: 37, legendary: 8 },
+  { common: 80, rare: 18, legendary: 2 },
+  { common: 75, rare: 22, legendary: 3 },
+  { common: 70, rare: 26, legendary: 4 },
+  { common: 65, rare: 29, legendary: 6 },
+  { common: 60, rare: 32, legendary: 8 },
+  { common: 55, rare: 35, legendary: 10 },
+  { common: 50, rare: 38, legendary: 12 },
+  { common: 45, rare: 41, legendary: 14 },
+  { common: 40, rare: 44, legendary: 16 },
 ]
 
 export function selectShopItems(pool, ownedIds, clearedRoundIndex, random = Math.random) {

@@ -28,12 +28,18 @@ function shuffle(arr) {
 
 // 关卡配置
 export const BLINDS = [
-  { act: 1, name: '小盲注', target: 300, icon: '🔵', color: '#4a6bff' },
-  { act: 1, name: '中盲注', target: 500, icon: '🟡', color: '#ffc857' },
-  { act: 1, name: '大盲注', target: 800, icon: '🔴', color: '#ff3344' },
-  { act: 2, name: '暮色盲注', target: 1200, icon: '🟣', color: '#a855f7' },
-  { act: 2, name: '幻影盲注', target: 2000, icon: '🌙', color: '#38bdf8' },
-  { act: 2, name: '终局盲注', target: 3200, icon: '👑', color: '#f97316' },
+  { act: 1, name: '小盲注', target: 250, icon: '🔵', color: '#4a6bff' },
+  { act: 1, name: '中盲注', target: 400, icon: '🟡', color: '#4a6bff' },
+  { act: 1, name: '大盲注', target: 650, icon: '🔴', color: '#4a6bff' },
+  { act: 2, name: '暮色盲注', target: 950, icon: '🟣', color: '#a855f7' },
+  { act: 2, name: '幻影盲注', target: 1400, icon: '🌙', color: '#a855f7' },
+  { act: 2, name: '月蚀盲注', target: 2000, icon: '🌑', color: '#a855f7' },
+  { act: 3, name: '星河盲注', target: 2800, icon: '🌌', color: '#38bdf8' },
+  { act: 3, name: '风暴盲注', target: 3800, icon: '🌪️', color: '#38bdf8' },
+  { act: 3, name: '深渊盲注', target: 5000, icon: '🕳️', color: '#38bdf8' },
+  { act: 4, name: '王座盲注', target: 6500, icon: '🏰', color: '#f97316' },
+  { act: 4, name: '命运盲注', target: 8500, icon: '🎭', color: '#f97316' },
+  { act: 4, name: '终局盲注', target: 11000, icon: '👑', color: '#f97316' },
 ]
 
 export { JOKER_POOL } from './jokerCatalog.js'
@@ -195,7 +201,7 @@ export function useGameState() {
 
     // 检查胜利/失败/继续
     if (blindScore.value >= currentBlind.value.target) {
-      const bonus = jokers.value.some(j => j.id === 'golden_joker') ? 3 : 0
+      const bonus = jokers.value.some(j => j.id === 'golden_joker') ? 2 : 0
       const reward = 5 + handsLeft.value
       lastReward.value = { base: reward, bonus, total: reward + bonus }
       money.value += reward + bonus

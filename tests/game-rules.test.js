@@ -13,15 +13,15 @@ function joker(id) {
   return JOKER_POOL.find(item => item.id === id)
 }
 
-test('the extended run has two acts and steadily rising targets', () => {
-  assert.equal(BLINDS.length, 6)
-  assert.deepEqual(BLINDS.map(blind => blind.act), [1, 1, 1, 2, 2, 2])
-  assert.deepEqual(BLINDS.map(blind => blind.target), [300, 500, 800, 1200, 2000, 3200])
+test('the extended run has four acts and steadily rising targets', () => {
+  assert.equal(BLINDS.length, 12)
+  assert.deepEqual(BLINDS.map(blind => blind.act), [1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4])
+  assert.deepEqual(BLINDS.map(blind => blind.target), [250, 400, 650, 950, 1400, 2000, 2800, 3800, 5000, 6500, 8500, 11000])
   assert.ok(BLINDS.every((blind, index) => index === 0 || blind.target > BLINDS[index - 1].target))
 })
 
-test('the expanded shop has thirty-two unique jokers and a reroll cost', () => {
-  assert.equal(JOKER_POOL.length, 32)
+test('the expanded shop has thirty-seven unique jokers and a reroll cost', () => {
+  assert.equal(JOKER_POOL.length, 37)
   assert.equal(new Set(JOKER_POOL.map(item => item.id)).size, JOKER_POOL.length)
   assert.equal(SHOP_REROLL_COST, 2)
 })
@@ -29,8 +29,8 @@ test('the expanded shop has thirty-two unique jokers and a reroll cost', () => {
 test('half joker rewards compact hands', () => {
   const result = calcScore(cards(['8', '♥'], ['8', '♣']), [joker('half_joker')])
   assert.equal(result.hand.name, '对子')
-  assert.equal(result.mult, 10)
-  assert.equal(result.score, 260)
+  assert.equal(result.mult, 7)
+  assert.equal(result.score, 182)
 })
 
 test('rank jokers count only their matching cards', () => {
@@ -38,9 +38,9 @@ test('rank jokers count only their matching cards', () => {
   const odd = calcScore(cards(['A', '♥'], ['7', '♣'], ['3', '♦']), [joker('odd_todd')])
   const faces = calcScore(cards(['J', '♥'], ['Q', '♣'], ['K', '♦']), [joker('smiley_face')])
 
-  assert.equal(even.mult, 5)
-  assert.equal(odd.mult, 7)
-  assert.equal(faces.mult, 10)
+  assert.equal(even.mult, 3)
+  assert.equal(odd.mult, 4)
+  assert.equal(faces.mult, 7)
 })
 
 test('hand specialists add chips to their supported hand families', () => {
@@ -50,9 +50,9 @@ test('hand specialists add chips to their supported hand families', () => {
     [joker('flush_flag')],
   )
 
-  assert.equal(pair.chips, 66)
+  assert.equal(pair.chips, 56)
   assert.equal(flush.hand.name, '同花')
-  assert.equal(flush.chips, 128)
+  assert.equal(flush.chips, 108)
 })
 
 test('AI still selects the strongest available play', () => {
