@@ -1,3 +1,5 @@
+import { createOpeningAudio } from './openingAudio.js';
+
 export function mountOpening(root, { onStart, onComplete, initialSound = true, onSoundChange = () => {} }) {
   const canvas = root.querySelector("canvas"),
     ctx = canvas.getContext("2d");
@@ -55,8 +57,10 @@ export function mountOpening(root, { onStart, onComplete, initialSound = true, o
   let soundEnabled = initialSound;
   let audioContext, audioBus, voices = [];
   let loadFailed = false;
+  let grinPlayed = false;
+  const openingAudio = createOpeningAudio(import.meta.env.BASE_URL, () => updateSound());
   function updateSound() {
-    soundButton.textContent = soundEnabled ? "声音：开" : "声音：关";
+    soundButton.textContent = soundEnabled ? (openingAudio.blocked ? "点击开启声音" : "声音：开") : "声音：关";
     soundButton.setAttribute("aria-pressed", String(soundEnabled));
     if (audioBus)
       audioBus.gain.setTargetAtTime(
@@ -145,12 +149,17 @@ export function mountOpening(root, { onStart, onComplete, initialSound = true, o
     };
   }
   listen(soundButton, "click", () => {
-    soundEnabled = !soundEnabled;
+    if (!(soundEnabled && openingAudio.blocked)) soundEnabled = !soundEnabled;
+    openingAudio.setEnabled(soundEnabled);
     unlockAudio();
     updateSound();
     onSoundChange(soundEnabled);
   });
   updateSound();
+  openingAudio.setEnabled(soundEnabled);
+  listen(root, "pointerdown", (event) => {
+    if (!event.target.closest("button")) { unlockAudio(); openingAudio.resume(); }
+  });
   let darknessMasks = [],
     retreatLayers = [],
     retreatBreath = 0;
@@ -478,6 +487,10 @@ export function mountOpening(root, { onStart, onComplete, initialSound = true, o
     }
   }
   function transition() {
+    if (!grinPlayed && elapsed >= EXPRESSION.start) {
+      grinPlayed = true;
+      openingAudio.grin();
+    }
     if (elapsed < ENDS.retreat) {
       enterPhase("retreat");
       drawRetreat(elapsed);
@@ -518,6 +531,7 @@ export function mountOpening(root, { onStart, onComplete, initialSound = true, o
   }
   function begin() {
     if (state !== "idle") return;
+    openingAudio.start();
     onStart();
     if (reduced || loadFailed) { finish(); return; }
     unlockAudio();
@@ -542,8 +556,8 @@ export function mountOpening(root, { onStart, onComplete, initialSound = true, o
     }
   });
   listen(document, "visibilitychange", () => {
-    if (document.hidden) audioContext?.suspend().catch(() => {});
-    else if (state === "transition") audioContext?.resume().catch(() => {});
+    if (document.hidden) { openingAudio.suspend(); audioContext?.suspend().catch(() => {}); }
+    else { openingAudio.resume(); audioContext?.resume().catch(() => {}); }
   });
   listen(startButton, "click", begin);
   listen(pause, "click", () => {
@@ -562,6 +576,7 @@ export function mountOpening(root, { onStart, onComplete, initialSound = true, o
     disposed = true;
     cancelAnimationFrame(raf);
     listeners.abort();
+    openingAudio.dispose();
     stopAudio();
     audioContext?.close().catch(() => {});
     removalObserver.disconnect();

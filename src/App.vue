@@ -172,7 +172,7 @@ function enterGame() {
   hasEntered.value = true
   nextTick(() => document.querySelector('.hand-cards button')?.focus({ preventScroll: true }))
   initAudio()
-  playBgm('main')
+  playBgm('main', { fadeIn: 1600 })
 }
 
 // ─── 组件 ref ───

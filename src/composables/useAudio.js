@@ -12,6 +12,8 @@ const sfxCache = new Map()
 let aiLoopSrc = null
 let bgmAudio = null
 let currentBgmKey = null
+let bgmFadeFrame = 0
+let bgmFade = 1
 
 // 启动时从 localStorage 读取设置
 ;(function loadFromStorage() {
@@ -81,8 +83,10 @@ export function stopAiLoop() {
   aiLoopSrc = null
 }
 
-export function playBgm(key) {
+export function playBgm(key, { fadeIn = 0 } = {}) {
   if (currentBgmKey === key) return
+  cancelAnimationFrame(bgmFadeFrame)
+  bgmFade = fadeIn ? 0 : 1
   if (bgmAudio) {
     bgmAudio.pause()
     bgmAudio.src = ''
@@ -94,9 +98,19 @@ export function playBgm(key) {
   const revision = key === 'main' ? '?v=electronic-v1' : ''
   const audio = new Audio(`${base}/audio/bgm/${key}.wav${revision}`)
   audio.loop = key !== 'win' && key !== 'lose'
-  audio.volume = bgmMuted.value ? 0 : bgmVolume.value / 100
+  audio.volume = bgmMuted.value ? 0 : bgmVolume.value / 100 * bgmFade
   bgmAudio = audio
-  audio.play().catch(() => {})
+  audio.play().then(() => {
+    if (!fadeIn || bgmAudio !== audio) return
+    const started = performance.now()
+    function fade(now) {
+      if (bgmAudio !== audio) return
+      bgmFade = Math.min(1, (now - started) / fadeIn)
+      audio.volume = bgmMuted.value ? 0 : bgmVolume.value / 100 * bgmFade
+      if (bgmFade < 1) bgmFadeFrame = requestAnimationFrame(fade)
+    }
+    bgmFadeFrame = requestAnimationFrame(fade)
+  }).catch(() => { if (bgmAudio === audio) currentBgmKey = null })
 }
 
 export function applyAudioSettings(s) {
@@ -105,7 +119,7 @@ export function applyAudioSettings(s) {
   if (s.sfxMuted != null) sfxMuted.value = s.sfxMuted
   if (s.bgmMuted != null) bgmMuted.value = s.bgmMuted
   if (sfxGainNode) sfxGainNode.gain.value = sfxMuted.value ? 0 : sfxVolume.value / 100
-  if (bgmAudio) bgmAudio.volume = bgmMuted.value ? 0 : bgmVolume.value / 100
+  if (bgmAudio) bgmAudio.volume = bgmMuted.value ? 0 : bgmVolume.value / 100 * bgmFade
 }
 
 export function useAudio() {
