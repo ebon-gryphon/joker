@@ -2,7 +2,7 @@
   <div class="end-screen">
     <div class="end-content" :class="isWon ? 'end-won' : 'end-lost'">
       <!-- 图标 -->
-      <div class="end-icon">{{ isWon ? '🎉' : '💀' }}</div>
+      <div class="end-icon">{{ isWon ? '♛' : '♠' }}</div>
 
       <!-- 标题 -->
       <div class="end-title">{{ isWon ? 'YOU WIN!' : 'GAME OVER' }}</div>
@@ -24,7 +24,7 @@
         </div>
         <div class="end-stat">
           <div class="end-stat-label">金币</div>
-          <div class="end-stat-value">💰 {{ money }}</div>
+          <div class="end-stat-value">＄ {{ money }}</div>
         </div>
         <div class="end-stat">
           <div class="end-stat-label">Joker 数</div>
@@ -34,7 +34,7 @@
 
       <!-- 重新开始 -->
       <button class="px-btn btn-restart" @click="$emit('restart')">
-        🔄 再来一局
+        再来一局
       </button>
     </div>
   </div>
@@ -69,7 +69,7 @@ defineEmits(['restart'])
   align-items: center;
   gap: 20px;
   padding: 48px;
-  border-radius: 20px;
+  border-radius: 4px;
   max-width: 480px;
   width: 90%;
   animation: end-appear 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
@@ -81,14 +81,14 @@ defineEmits(['restart'])
 }
 
 .end-won {
-  background: linear-gradient(145deg, #1a3a1a, #2a5a2a);
-  border: 3px solid #62d18b;
+  background: linear-gradient(145deg, #243d29, #102116);
+  border: 1px solid #b59b59;
   box-shadow: 0 0 60px rgba(98, 209, 139, 0.3), 0 20px 60px rgba(0,0,0,0.5);
 }
 
 .end-lost {
-  background: linear-gradient(145deg, #3a1a1a, #5a2020);
-  border: 3px solid #ff5544;
+  background: linear-gradient(145deg, #342422, #201715);
+  border: 1px solid #926456;
   box-shadow: 0 0 60px rgba(255, 85, 68, 0.3), 0 20px 60px rgba(0,0,0,0.5);
 }
 
@@ -98,7 +98,7 @@ defineEmits(['restart'])
 }
 
 .end-title {
-  font-family: 'Press Start 2P', monospace;
+  font-family: Georgia, serif;
   font-size: 32px;
   color: #fff;
   text-shadow: 0 0 20px currentColor;
@@ -133,7 +133,7 @@ defineEmits(['restart'])
 
 .end-stat {
   background: rgba(255,255,255,0.06);
-  border-radius: 10px;
+  border-radius: 4px;
   padding: 14px;
   text-align: center;
 }
@@ -146,7 +146,7 @@ defineEmits(['restart'])
 }
 
 .end-stat-value {
-  font-family: 'VT323', monospace;
+  font-family: Georgia, serif;
   font-size: 32px;
   color: var(--gold);
   line-height: 1;
@@ -154,7 +154,7 @@ defineEmits(['restart'])
 
 /* 重开按钮 */
 .btn-restart {
-  background: linear-gradient(135deg, #fbbf24, #d97706);
+  background: linear-gradient(135deg, #dfc68e, #b9995d);
   color: #1a1a1a;
   font-size: 18px;
   padding: 16px 40px;

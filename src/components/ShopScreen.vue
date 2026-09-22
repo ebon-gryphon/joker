@@ -1,9 +1,9 @@
 <template>
   <div class="shop-screen">
     <div class="shop-header">
-      <h2 class="shop-title">🏪 商店</h2>
+      <h2 class="shop-title">小丑商店</h2>
       <div class="shop-money">
-        <span class="shop-money-icon">💰</span>
+        <span class="shop-money-icon">＄</span>
         <span class="shop-money-num">{{ money }}</span>
       </div>
     </div>
@@ -16,7 +16,7 @@
     <button class="px-btn catalog-button" @click="$emit('catalog')">浏览 {{ JOKER_POOL.length }} 张小丑牌图鉴 ↗</button>
     <!-- AI 建议 -->
     <div v-if="aiSuggestion" class="shop-ai-hint">
-      🤖 AI 建议购买：<strong>{{ aiSuggestion.name }}</strong>
+      推荐组合：<strong>{{ aiSuggestion.name }}</strong>
     </div>
 
     <div class="shop-items">
@@ -26,7 +26,7 @@
         class="shop-item"
         :class="'rarity-' + item.rarity"
       >
-        <div class="shop-item-art">{{ item.art }}</div>
+        <JokerArt class="shop-item-art" :joker="item" />
         <div class="shop-item-name">{{ item.name }}</div>
         <div class="shop-item-desc">{{ item.desc }}</div>
         <div class="shop-item-rarity" :class="'badge-' + item.rarity">
@@ -53,7 +53,7 @@
       <p>我的组合 · 从左到右结算 · 出售返还半价（向下取整）</p>
       <div class="owned-items">
         <article v-for="(joker, index) in jokers" :key="joker.id" :title="joker.desc">
-          <strong>{{ joker.art }} {{ joker.name }}</strong><small>{{ jokerStatus(joker) || joker.desc }}</small>
+          <JokerArt class="owned-art" :joker="joker" /><strong>{{ joker.name }}</strong><small>{{ jokerStatus(joker) || joker.desc }}</small>
           <div><button :disabled="index === 0" :aria-label="`左移${joker.name}`" @click="$emit('move', index, -1)">←</button><button :disabled="index === jokers.length - 1" :aria-label="`右移${joker.name}`" @click="$emit('move', index, 1)">→</button><button @click="$emit('sell', joker.id)">出售 ${{ Math.max(1, Math.floor(joker.price / 2)) }}</button></div>
         </article>
       </div>
@@ -64,16 +64,17 @@
         :disabled="!canReroll"
         @click="onReroll"
       >
-        🔄 重新进货 ${{ rerollCost }}
+        重新进货 ${{ rerollCost }}
       </button>
       <button class="px-btn btn-skip" @click="onSkip">
-        跳过 →
+        下一关 →
       </button>
     </div>
   </div>
 </template>
 
 <script setup>
+import JokerArt from './JokerArt.vue'
 import { computed } from 'vue'
 import { JOKER_POOL, jokerStatus } from '../composables/jokerCatalog.js'
 import { getShopSuggestion } from '../composables/useAI.js'
@@ -150,11 +151,11 @@ function onReroll() {
 
 <style scoped>
 .owned-section { width: min(850px, 100%); }
-.owned-section p { color: #adbedc; font-size: 12px; margin: 0 0 10px; }
+.owned-section p { color: #b9ad90; font-size: 12px; margin: 0 0 10px; }
 .owned-items { display: flex; flex-wrap: wrap; gap: 10px; }
-.owned-items article { flex: 1; min-width: 140px; padding: 10px; background: #ffffff09; border: 1px solid #ffffff22; border-radius: 8px; }
+.owned-items article { flex: 1; min-width: 140px; padding: 10px; background: #ffffff09; border: 1px solid #ffffff22; border-radius: 3px; }
 .owned-items strong { font-size: 12px; color: white; }
-.owned-items small { display: block; font-size: 10px; color: #b2c7df; min-height: 30px; margin: 8px 0; }
+.owned-items small { display: block; font-size: 10px; color: #c0b799; min-height: 30px; margin: 8px 0; }
 .owned-items button { color: #ffd17b; background: transparent; border: 1px solid #ffffff33; border-radius: 4px; margin-right: 4px; padding: 4px; cursor: pointer; }
 .owned-items button:disabled { opacity: .25; }
 .catalog-button { font-size: 12px; min-height: 32px; padding: 8px 16px; }
@@ -162,7 +163,7 @@ function onReroll() {
 .shop-screen {
   position: fixed;
   inset: 0;
-  background: linear-gradient(135deg, #0a1438 0%, #1a2858 50%, #0d1b40 100%);
+  background: radial-gradient(ellipse at 50% 20%,#173c2710,#04180bc9),url('/felt.svg');
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -182,9 +183,10 @@ function onReroll() {
 .shop-title {
   font-family: 'Inter', 'PingFang SC', sans-serif;
   font-size: 32px;
-  font-weight: 800;
+  font-family: var(--font-display);
+  font-weight: 600;
   color: var(--gold);
-  text-shadow: 0 0 20px rgba(255,200,87,0.5);
+  letter-spacing: 5px;
 }
 
 .shop-money {
@@ -194,7 +196,7 @@ function onReroll() {
   background: rgba(255,200,87,0.1);
   border: 2px solid rgba(255,200,87,0.3);
   padding: 8px 16px;
-  border-radius: 10px;
+  border-radius: 4px;
 }
 
 .shop-money-icon {
@@ -202,7 +204,7 @@ function onReroll() {
 }
 
 .shop-money-num {
-  font-family: 'VT323', monospace;
+  font-family: Georgia, serif;
   font-size: 36px;
   color: var(--gold);
   line-height: 1;
@@ -215,25 +217,26 @@ function onReroll() {
 }
 
 .shop-ai-hint {
-  background: rgba(192, 132, 252, 0.12);
-  border: 1px solid rgba(192, 132, 252, 0.35);
+  background: rgba(189, 165, 97, 0.08);
+  border: 1px solid rgba(189, 165, 97, 0.3);
   padding: 8px 16px;
-  border-radius: 8px;
+  border-radius: 3px;
   font-size: 14px;
-  color: #c084fc;
+  color: #c3b27e;
 }
 
 /* 商店商品 */
 .shop-items {
   display: flex;
+  flex-wrap: wrap;
   gap: 24px;
   justify-content: center;
 }
 
 .shop-item {
-  width: 160px;
-  background: linear-gradient(145deg, #1e2d60, #2a3d80);
-  border-radius: 14px;
+  width: 215px;
+  background: linear-gradient(145deg, #24382b, #1a2a20);
+  border-radius: 4px;
   padding: 16px 12px;
   display: flex;
   flex-direction: column;
@@ -268,10 +271,8 @@ function onReroll() {
   50% { box-shadow: 0 4px 36px rgba(181, 119, 255, 0.7), 0 0 20px rgba(181, 119, 255, 0.3); }
 }
 
-.shop-item-art {
-  font-size: 48px;
-  line-height: 1;
-}
+.shop-item-art { width: 120px; box-shadow: 2px 4px 12px #0006; }
+.owned-art { width: 64px; margin: 0 auto 10px; }
 
 .shop-item-name {
   font-family: 'Inter', 'PingFang SC', sans-serif;
@@ -306,7 +307,7 @@ function onReroll() {
   min-height: 44px;
   padding: 10px;
   font-size: 13px;
-  border-radius: 8px;
+  border-radius: 3px;
 }
 
 .btn-sold {
@@ -327,7 +328,7 @@ function onReroll() {
   background: rgba(255, 85, 68, 0.12);
   border: 1px solid rgba(255, 85, 68, 0.3);
   padding: 8px 16px;
-  border-radius: 8px;
+  border-radius: 3px;
   font-size: 13px;
   color: #ff5544;
 }
@@ -341,7 +342,8 @@ function onReroll() {
 
 .btn-reroll {
   background: transparent;
-  color: #c084fc;
-  border-color: rgba(192, 132, 252, 0.55);
+  color: #c3b27e;
+  border-color: rgba(189, 165, 97, 0.5);
 }
+@media(max-width:600px) { .shop-screen { padding: 22px 15px; }.shop-header { gap: 18px; }.shop-title { font-size: 26px; }.shop-items { gap: 12px; }.shop-item { width: min(215px,100%); }.shop-subtitle { text-align: center; font-size: 12px; } .shop-actions .px-btn { padding: 12px 16px; font-size: 14px; } }
 </style>

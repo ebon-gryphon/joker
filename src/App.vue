@@ -1,12 +1,8 @@
 <template>
-  <div class="app-layout" @click.once="onFirstInteraction">
+  <OpeningScreen v-if="!hasEntered" :soundEnabled="!settings.sfxMuted" @sound="setOpeningSound" @start="initAudio" @complete="enterGame" />
+  <div class="app-layout" :inert="!hasEntered || showSettings || showCatalog || showRoute">
     <!-- 游戏进行中 -->
     <template v-if="phase === 'playing'">
-      <!-- 设置按钮 -->
-      <button class="px-btn btn-settings settings-btn" @click="showSettings = true">
-        ⚙️
-      </button>
-
       <!-- 左侧 Sidebar -->
       <SideBar
         :currentBlind="currentBlind"
@@ -15,13 +11,14 @@
         :handsLeft="handsLeft"
         :discardsLeft="discardsLeft"
         :money="money"
-        :previewScore="previewScore"
         :roundIndex="roundIndex"
+        @route="showRoute = true"
+        @settings="showSettings = true"
       />
 
       <!-- 右侧主区域 -->
       <div class="main-area">
-        <!-- 第1段: Joker区 (230px) -->
+        <!-- 小丑牌组合 -->
         <JokerArea
           :jokers="jokers"
           :disabled="isScoring || aiThinking"
@@ -30,7 +27,7 @@
           ref="jokerAreaRef"
         />
 
-        <!-- 第2段: 出牌区 (1fr) -->
+        <!-- 出牌结算 -->
         <PlayArea
           :playedCards="playedCards"
           :deckCount="deckCount"
@@ -39,7 +36,7 @@
           ref="playAreaRef"
         />
 
-        <!-- 第3段: 手牌+操作 (280px) -->
+        <!-- 手牌、预览和操作 -->
         <HandArea
           :hand="hand"
           :selectedCards="selectedCards"
@@ -47,6 +44,8 @@
           :discardsLeft="discardsLeft"
           :isScoring="isScoring"
           :aiThinking="aiThinking"
+          :previewScore="previewScore"
+          :remainingScore="Math.max(0, currentBlind.target - blindScore)"
           ref="handAreaRef"
           @selectCard="toggleCard"
           @play="handlePlay"
@@ -88,6 +87,9 @@
       @restart="restart"
     />
 
+  </div>
+
+    <RouteModal v-if="showRoute" :roundIndex="roundIndex" @close="showRoute = false" />
     <JokerCatalog v-if="showCatalog" :jokers="jokers" @close="showCatalog = false" />
 
     <!-- 设置弹窗 -->
@@ -97,7 +99,6 @@
       @close="showSettings = false"
       @save="onSaveSettings"
     />
-  </div>
 </template>
 
 <script setup>
@@ -105,6 +106,8 @@ import { ref, reactive, nextTick, watch } from 'vue'
 import gsap from 'gsap'
 import { initAudio, playSfx, startAiLoop, stopAiLoop, playBgm, applyAudioSettings } from './composables/useAudio.js'
 
+import OpeningScreen from './components/OpeningScreen.vue'
+import RouteModal from './components/RouteModal.vue'
 import SideBar from './components/SideBar.vue'
 import JokerCatalog from './components/JokerCatalog.vue'
 import JokerArea from './components/JokerArea.vue'
@@ -122,15 +125,17 @@ import { findBestPlay } from './composables/useAI.js'
 const {
   scoreContext, lastReward, moveJoker, sellJoker,
   phase, roundIndex, blindScore, money, handsLeft, discardsLeft,
-  deck, deckCount, hand, selectedCards, playedCards, jokers,
-  currentHandType, isScoring, shopItems, soldItems,
-  currentBlind, progress, selectedCount, previewScore,
+  deckCount, hand, selectedCards, playedCards, jokers,
+  isScoring, shopItems, soldItems,
+  currentBlind, selectedCount, previewScore,
   toggleCard, sortByRank, sortBySuit,
   playHand, finishScoring, discardCards,
   buyJoker, rerollShop, skipShop, restart,
 } = useGameState()
 
 // ─── UI 状态 ───
+const hasEntered = ref(false)
+const showRoute = ref(false)
 const showSettings = ref(false)
 const showCatalog = ref(false)
 const aiThinking = ref(false)
@@ -147,20 +152,25 @@ const scoringState = reactive({
 const DEFAULT_SETTINGS = { bgmVolume: 60, sfxVolume: 80, bgmMuted: false, sfxMuted: false, animSpeed: 1.0, showFormula: true }
 const SETTINGS_KEY = 'balatro.settings'
 
-const settings = ref({
-  ...DEFAULT_SETTINGS,
-  ...JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}')
-})
+let savedSettings = {}
+try { savedSettings = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}') || {} } catch {}
+const settings = ref({ ...DEFAULT_SETTINGS, ...savedSettings })
 animSpeed.value = settings.value.animSpeed
 
 function onSaveSettings(newSettings) {
   settings.value = newSettings
   animSpeed.value = newSettings.animSpeed
   applyAudioSettings(newSettings)
-  localStorage.setItem(SETTINGS_KEY, JSON.stringify(newSettings))
+  try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(newSettings)) } catch {}
 }
 
-function onFirstInteraction() {
+function setOpeningSound(enabled) {
+  onSaveSettings({ ...settings.value, sfxMuted: !enabled, bgmMuted: !enabled })
+}
+
+function enterGame() {
+  hasEntered.value = true
+  nextTick(() => document.querySelector('.hand-cards button')?.focus({ preventScroll: true }))
   initAudio()
   playBgm('main')
 }
@@ -177,7 +187,7 @@ function dur(ms) {
 
 // ─── 出牌处理（含完整动画时序） ───
 async function handlePlay() {
-  if (isScoring.value || selectedCards.value.length === 0) return
+  if (!hasEntered.value || isScoring.value || aiThinking.value || selectedCards.value.length === 0) return
 
   playSfx('play')
   const result = playHand()
@@ -211,6 +221,7 @@ async function handlePlay() {
     for (let i = 0; i < pCards.length; i++) {
       const cardVal = cardValue(pCards[i].rank)
       runningChips += cardVal
+      const displayedChips = runningChips
 
       await delay(150)
       playSfx('chip')
@@ -235,7 +246,7 @@ async function handlePlay() {
         span.style.cssText = `
           position: fixed;
           color: #4dd6ff;
-          font-family: 'Press Start 2P', monospace;
+          font-family: Georgia, serif;
           font-size: 18px;
           font-weight: bold;
           pointer-events: none;
@@ -254,7 +265,7 @@ async function handlePlay() {
           duration: dur(400),
           ease: 'power2.in',
           opacity: 0,
-          onComplete: () => { span.remove(); scoringState.chips = runningChips }
+          onComplete: () => { span.remove(); scoringState.chips = displayedChips }
         })
       }
     }
@@ -299,7 +310,7 @@ async function handlePlay() {
         span.style.cssText = `
           position: fixed;
           color: ${effectColor};
-          font-family: 'Press Start 2P', monospace;
+          font-family: Georgia, serif;
           font-size: 16px;
           font-weight: bold;
           pointer-events: none;
@@ -359,22 +370,18 @@ async function handlePlay() {
 
     await delay(700)
 
-    // 完成计分
-    finishScoring(score)
-
-    // 重置计分显示（延迟清除，让玩家看到）
-    await delay(800)
+    // Keep the table locked until every visual has finished.
+    await delay(300)
   } catch (e) {
     console.error('handlePlay error:', e)
-    finishScoring(score)
   } finally {
     scoringState.handType = null
     scoringState.chips = 0
     scoringState.mult = 0
     // 清空出牌区，避免打出的牌卡在中央不消失
     playedCards.value = []
-    // 确保 isScoring 不会永久卡住
-    if (isScoring.value) isScoring.value = false
+    // Cleanup precedes the state transition so the next hand cannot be cleared by this animation.
+    finishScoring(score)
   }
 }
 
@@ -392,7 +399,7 @@ function showScorePopupFn(text) {
     left: 50%;
     transform: translate(-50%, -50%) scale(0.8);
     z-index: 9998;
-    font-family: 'Press Start 2P', monospace;
+    font-family: Georgia, serif;
     font-size: 24px;
     color: #fff;
     text-align: center;
@@ -400,29 +407,29 @@ function showScorePopupFn(text) {
     pointer-events: none;
     white-space: nowrap;
     opacity: 0;
-    background: rgba(10, 20, 56, 0.85);
+    background: rgba(11, 26, 19, 0.95);
     padding: 16px 24px;
-    border-radius: 12px;
-    border: 2px solid rgba(77, 214, 255, 0.4);
+    border-radius: 3px;
+    border: 1px solid #c5a565;
   `
   el.textContent = text
   document.body.appendChild(el)
 
   gsap.timeline({ onComplete: () => el.remove() })
     .to(el, { opacity: 1, scale: 1.05, duration: dur(200), ease: 'back.out(2)', transformOrigin: 'center center' })
-    .to(el, { opacity: 0, scale: 0.9, duration: dur(300), delay: dur(800) / 1000, ease: 'power2.in' })
+    .to(el, { opacity: 0, scale: 0.9, duration: dur(300), delay: dur(800), ease: 'power2.in' })
 }
 
 // ─── 弃牌处理 ───
 async function handleDiscard() {
-  if (isScoring.value || discardsLeft.value <= 0 || selectedCards.value.length === 0) return
+  if (!hasEntered.value || aiThinking.value || isScoring.value || discardsLeft.value <= 0 || selectedCards.value.length === 0) return
   playSfx('discard')
   discardCards()
 }
 
 // ─── AI 出牌 ───
 async function handleAIPlay() {
-  if (aiThinking.value || isScoring.value) return
+  if (!hasEntered.value || aiThinking.value || isScoring.value) return
 
   aiThinking.value = true
   playSfx('ai-start')
@@ -467,7 +474,7 @@ function handleSkip() {
 
 // ─── 工具函数 ───
 function delay(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms))
+  return new Promise(resolve => setTimeout(resolve, ms * animSpeed.value))
 }
 
 // 同步 displayBlindScore 与 blindScore（初始和重置时）
@@ -493,32 +500,10 @@ watch(phase, (newPhase) => {
 </script>
 
 <style scoped>
-.app-layout {
-  display: flex;
-  width: 100vw;
-  height: 100vh;
-  overflow: hidden;
-  position: relative;
-  background: var(--bg-deep);
-}
-
-/* 右侧主区域 */
-.main-area {
-  flex: 1;
-  display: grid;
-  grid-template-rows: 230px 1fr 290px;
-  overflow: hidden;
-  min-width: 0;
-}
-
-/* 设置按钮（右上角） */
-.settings-btn {
-  position: absolute;
-  top: 16px;
-  right: 16px;
-  z-index: 100;
-  min-height: 44px;
-  padding: 10px 14px;
-  font-size: 18px;
-}
+.app-layout { display: flex; width: 100%; min-width: 320px; height: 100dvh; min-height: 650px; position: relative; background: var(--bg-deep); }
+.main-area { flex: 1; min-width: 0; display: grid; grid-template-rows: auto minmax(145px,1fr) auto; position: relative; isolation: isolate; background: radial-gradient(ellipse at 48% 35%,#173c2710,#04180ba8),url('/felt.svg'); border: 1px solid #82693688; margin: 7px 7px 7px 0; box-shadow: inset 0 0 90px #0008; }
+.main-area::before { content: ''; position: absolute; inset: 13px; border: 1px solid #b2944933; border-radius: 35% / 12%; pointer-events: none; z-index: -1; }
+.main-area::after { content: '♠  ♦  ♣  ♥'; position: absolute; left: 50%; bottom: 6px; transform: translateX(-50%); font: 9px Georgia,serif; letter-spacing: 12px; color: #b5985050; pointer-events: none; }
+@media(max-width:700px) { .app-layout { min-height: 780px; } }
+@media(max-width:600px) { .app-layout { flex-direction: column; height: auto; min-height: 100dvh; } .main-area { flex: none; min-height: 690px; margin: 5px; grid-template-rows: auto minmax(170px,1fr) auto; } }
 </style>

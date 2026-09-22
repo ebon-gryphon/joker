@@ -1,9 +1,9 @@
 <template>
-  <div class="settings-overlay" @click.self="$emit('close')">
-    <div class="settings-modal">
+  <div class="settings-overlay" @keydown.esc="$emit('close')" @click.self="$emit('close')">
+    <div ref="dialog" class="settings-modal" role="dialog" aria-modal="true" aria-labelledby="settings-title" @keydown.tab="trapFocus">
       <div class="settings-header">
-        <h3 class="settings-title">⚙️ 设置</h3>
-        <button class="settings-close" @click="$emit('close')">✕</button>
+        <h3 id="settings-title" class="settings-title">设置</h3>
+        <button ref="closeButton" aria-label="关闭设置" class="settings-close" @click="$emit('close')">✕</button>
       </div>
 
       <div class="settings-body">
@@ -14,13 +14,13 @@
             type="range"
             min="0"
             max="100"
-            v-model="localSettings.bgmVolume"
+            v-model="localSettings.bgmVolume" aria-label="背景音乐音量"
             class="settings-slider"
             :disabled="localSettings.bgmMuted"
           />
           <span class="settings-value">{{ localSettings.bgmMuted ? '静音' : localSettings.bgmVolume + '%' }}</span>
           <label class="settings-toggle mute-toggle" title="BGM 静音">
-            <input type="checkbox" v-model="localSettings.bgmMuted" />
+            <input type="checkbox" v-model="localSettings.bgmMuted" aria-label="静音背景音乐" />
             <span class="toggle-track"><span class="toggle-thumb"></span></span>
           </label>
         </div>
@@ -32,13 +32,13 @@
             type="range"
             min="0"
             max="100"
-            v-model="localSettings.sfxVolume"
+            v-model="localSettings.sfxVolume" aria-label="音效音量"
             class="settings-slider"
             :disabled="localSettings.sfxMuted"
           />
           <span class="settings-value">{{ localSettings.sfxMuted ? '静音' : localSettings.sfxVolume + '%' }}</span>
           <label class="settings-toggle mute-toggle" title="SFX 静音">
-            <input type="checkbox" v-model="localSettings.sfxMuted" />
+            <input type="checkbox" v-model="localSettings.sfxMuted" aria-label="静音音效" />
             <span class="toggle-track"><span class="toggle-thumb"></span></span>
           </label>
         </div>
@@ -62,7 +62,7 @@
         <div class="settings-row">
           <label class="settings-label">显示公式预览</label>
           <label class="settings-toggle">
-            <input type="checkbox" v-model="localSettings.showFormula" />
+            <input type="checkbox" v-model="localSettings.showFormula" aria-label="显示计分公式" />
             <span class="toggle-track">
               <span class="toggle-thumb"></span>
             </span>
@@ -79,7 +79,10 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref } from 'vue'
+import { useDialogFocus } from '../composables/useDialogFocus.js'
+const dialog = ref(null), closeButton = ref(null)
+const { trapFocus } = useDialogFocus(dialog, closeButton)
 
 const props = defineProps({
   settings: { type: Object, required: true },
@@ -113,11 +116,11 @@ function onSave() {
 }
 
 .settings-modal {
-  background: linear-gradient(145deg, #1a2858, #0d1b40);
-  border: 2px solid rgba(74, 107, 255, 0.4);
-  border-radius: 16px;
+  background: linear-gradient(145deg, #20372a, #101d16);
+  border: 2px solid rgba(173, 147, 85, 0.5);
+  border-radius: 4px;
   padding: 24px;
-  min-width: 380px;
+  width: min(500px, calc(100vw - 30px));
   box-shadow: 0 20px 60px rgba(0,0,0,0.6);
   animation: modal-appear 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
@@ -187,7 +190,7 @@ function onSave() {
 }
 
 .settings-value {
-  font-family: 'VT323', monospace;
+  font-family: Georgia, serif;
   font-size: 20px;
   color: var(--gold);
   min-width: 40px;
@@ -221,14 +224,17 @@ function onSave() {
 }
 
 .settings-toggle input {
-  display: none;
+  position: absolute;
+  opacity: 0;
+  width: 44px;
+  height: 24px;
 }
 
 .toggle-track {
   width: 44px;
   height: 24px;
   background: rgba(255,255,255,0.15);
-  border-radius: 12px;
+  border-radius: 4px;
   position: relative;
   transition: background 0.2s;
 }
@@ -258,4 +264,6 @@ function onSave() {
   justify-content: flex-end;
   margin-top: 20px;
 }
+.settings-toggle input:focus-visible + .toggle-track { outline: 2px solid var(--gold); outline-offset: 3px; }
+@media(max-width:500px) { .settings-modal { padding: 18px; } .settings-row { gap: 8px; flex-wrap: wrap; } .settings-label { min-width: 90px; } }
 </style>
