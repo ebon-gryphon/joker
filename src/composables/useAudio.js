@@ -90,7 +90,9 @@ export function playBgm(key) {
   }
   currentBgmKey = key
   const base = import.meta.env.BASE_URL.replace(/\/$/, '')
-  const audio = new Audio(`${base}/audio/bgm/${key}.wav`)
+  // Bust the previous main-track cache after the approved music replacement.
+  const revision = key === 'main' ? '?v=electronic-v1' : ''
+  const audio = new Audio(`${base}/audio/bgm/${key}.wav${revision}`)
   audio.loop = key !== 'win' && key !== 'lose'
   audio.volume = bgmMuted.value ? 0 : bgmVolume.value / 100
   bgmAudio = audio

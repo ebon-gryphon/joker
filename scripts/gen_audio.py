@@ -236,44 +236,8 @@ def bass_note(freq, dur_beats, vol=0.5):
         out.append(v * AMP)
     return out
 
-# ── main BGM: Am-F-C-G 循环 ──────────────────
-# 每和弦 4 拍，一圈 16 拍，重复 4 次 = 约 15s
-def make_main_bgm():
-    # 和弦 -> 音符序列 (freq, beats)
-    chords = [
-        # Am: A3 C4 E4 A4
-        [(A3,0.5),(C4,0.5),(E4,0.5),(A4,0.5),(E4,0.5),(C4,0.5),(A3,0.5),(C4,0.5)],
-        # F: F3 A3 C4 F4
-        [(F3,0.5),(A3,0.5),(C4,0.5),(F4,0.5),(C4,0.5),(A3,0.5),(F3,0.5),(A3,0.5)],
-        # C: C4 E4 G4 C5
-        [(C4,0.5),(E4,0.5),(G4,0.5),(C5,0.5),(G4,0.5),(E4,0.5),(C4,0.5),(E4,0.5)],
-        # G: G3 B3 D4 G4
-        [(G3,0.5),(B3,0.5),(D4,0.5),(G4,0.5),(D4,0.5),(B3,0.5),(G3,0.5),(B3,0.5)],
-    ]
-    bass_line = [
-        (A2:=110.0, 4), (F2:=87.3, 4), (C3, 4), (G2:=98.0, 4)
-    ]
-
-    melody_track = []
-    bass_track = []
-
-    for _ in range(4):  # 重复 4 圈
-        for chord_notes, (b_freq, b_beats) in zip(chords, bass_line):
-            for freq, beats in chord_notes:
-                melody_track.extend(arp_note(freq, beats, vol=0.6))
-            bass_track.extend(bass_note(b_freq, b_beats, vol=0.55))
-
-    # 对齐长度
-    length = min(len(melody_track), len(bass_track))
-    melody_track = melody_track[:length]
-    bass_track = bass_track[:length]
-
-    combined = [m + b for m, b in zip(melody_track, bass_track)]
-    peak = max(abs(v) for v in combined) or 1
-    scale = 30000 / peak
-    return [v * scale for v in combined]
-
-save_wav(f'{BGM_DIR}/main.wav', make_main_bgm())
+# Main BGM is maintained separately by gen_main_bgm.py (approved electronic theme).
+# Do not overwrite it when rebuilding the legacy SFX and shop/end cues.
 
 # ── shop BGM: C-G-Am-F，明亮轻快 ─────────────
 def make_shop_bgm():
