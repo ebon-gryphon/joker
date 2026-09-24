@@ -16,6 +16,19 @@ function setup() {
 }
 const settle = () => new Promise(resolve => setImmediate(resolve))
 
+test('cover ambience loops while waiting, then cuts without reaching the end', async () => {
+  const {controller, cover} = setup()
+  controller.resume()
+  await settle()
+  assert.equal(cover.loop, true)
+  assert.equal(cover.paused, false)
+  cover.currentTime = 2
+  controller.start()
+  await new Promise(resolve => setTimeout(resolve, 15))
+  assert.equal(cover.paused, true)
+  controller.dispose()
+})
+
 test('blocked cover playback can retry, but cannot restart after beginning', async () => {
   const {controller, cover} = setup()
   cover.reject = true

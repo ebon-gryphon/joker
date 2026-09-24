@@ -36,6 +36,7 @@ export function createOpeningAudio(base, onBlocked = () => {}, AudioClass = glob
     },
     suspend() { cover.pause(); grin.pause() },
     dispose() {
+      if (disposed) return
       disposed = true
       clearTimeout(timer)
       for (const audio of [cover, grin]) { audio.pause(); audio.removeAttribute('src'); audio.load() }

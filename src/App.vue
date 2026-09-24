@@ -1,5 +1,5 @@
 <template>
-  <OpeningScreen v-if="!hasEntered" :soundEnabled="!settings.sfxMuted" @sound="setOpeningSound" @start="initAudio" @complete="enterGame" />
+  <OpeningScreen v-if="!hasEntered" :soundEnabled="!settings.sfxMuted" @sound="setOpeningSound" @start="startOpening" @complete="enterGame" />
   <div class="app-layout" :inert="!hasEntered || showSettings || showCatalog || showRoute">
     <!-- 游戏进行中 -->
     <template v-if="phase === 'playing'">
@@ -102,9 +102,9 @@
 </template>
 
 <script setup>
-import { ref, reactive, nextTick, watch } from 'vue'
+import { ref, reactive, nextTick, watch, onMounted } from 'vue'
 import gsap from 'gsap'
-import { initAudio, playSfx, startAiLoop, stopAiLoop, playBgm, applyAudioSettings } from './composables/useAudio.js'
+import { initAudio, playSfx, startAiLoop, stopAiLoop, playBgm, prepareBgm, unlockBgm, applyAudioSettings } from './composables/useAudio.js'
 
 import OpeningScreen from './components/OpeningScreen.vue'
 import RouteModal from './components/RouteModal.vue'
@@ -168,11 +168,18 @@ function setOpeningSound(enabled) {
   onSaveSettings({ ...settings.value, sfxMuted: !enabled, bgmMuted: !enabled })
 }
 
+onMounted(() => prepareBgm('main'))
+
+function startOpening() {
+  initAudio()
+  unlockBgm('main')
+}
+
 function enterGame() {
   hasEntered.value = true
   nextTick(() => document.querySelector('.hand-cards button')?.focus({ preventScroll: true }))
   initAudio()
-  playBgm('main', { fadeIn: 1600 })
+  playBgm('main')
 }
 
 // ─── 组件 ref ───

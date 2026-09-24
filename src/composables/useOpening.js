@@ -519,6 +519,9 @@ export function mountOpening(root, { onStart, onComplete, initialSound = true, o
     if (progress >= 1) finish();
   }
   function finish() {
+    if (state === "game") return;
+    openingAudio.dispose();
+    stopAudio();
     state = "game";
     ctx.clearRect(0, 0, 1672, 941);
     root.classList.add("revealing");
