@@ -1,0 +1,2 @@
+/* Compatibility stylesheet; shared implementation is mode-scoped. */
+@import '../../src/modes/duel/player-feedback.css';

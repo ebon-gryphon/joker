@@ -38,3 +38,19 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 
 # Finder (MacOS) folder config
 .DS_Store
+
+# Local screenshots, generated previews, and workspace backups
+/output/
+/小丑牌备份/
+/封面预览.html
+
+# Earlier artwork iterations that are not used by the game
+/public/duel/finale-grab-v1.png
+/public/duel/result-actions-dark-v2.png
+/public/duel/result-actions-v1.png
+/public/duel/result-reactions-v1.png
+/public/duel/rival-dark-v3.png
+/public/duel/rival-v2.webp
+/public/duel/theatre-v2.webp
+/public/opening/left-sleeve-extension.png
+/public/opening/left-sweep-glove.png

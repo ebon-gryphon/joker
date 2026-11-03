@@ -1,8 +1,25 @@
 import { createOpeningAudio } from './openingAudio.js';
+import { createOpeningChoice } from './openingChoice.js';
+import { createOpeningScene } from './openingScene.js';
+import { OPENING_CARD, createOpeningFlightLayout, openingFlightPose, openingRevealPose } from './openingFlight.js';
 
-export function mountOpening(root, { onStart, onComplete, initialSound = true, onSoundChange = () => {} }) {
-  const canvas = root.querySelector("canvas"),
+export function mountOpening(root, { onStart, onComplete, onModeSelect = () => {}, onReveal = () => {}, initialSound = true, onSoundChange = () => {} }) {
+  const canvas = root.querySelector("[data-cover-canvas]"),
     ctx = canvas.getContext("2d");
+  // The cover keeps its original contained framing. The thrown card has its
+  // own viewport-sized canvas so it can cover phones and wide screens alike.
+  const flightCanvas = root.querySelector('[data-flight-canvas]');
+  const flightContext = flightCanvas.getContext('2d');
+  let flightLayout, flightPixelRatio;
+  const scroller = root.ownerDocument.documentElement;
+  const previousOverflow = scroller.style.overflow;
+  let scrollingLocked = true;
+  scroller.style.overflow = 'hidden';
+  function unlockScrolling() {
+    if (!scrollingLocked) return;
+    scrollingLocked = false;
+    scroller.style.overflow = previousOverflow;
+  }
   const source = root.querySelector("[data-source]"),
     closed = root.querySelector("[data-closed]"),
     plate = root.querySelector("[data-plate]");
@@ -22,7 +39,7 @@ export function mountOpening(root, { onStart, onComplete, initialSound = true, o
     darkPause: 0.2,
     flight: 0.92,
     hold: 0.3,
-    reveal: 0.68,
+    reveal: 0.82,
   };
   const ENDS = {};
   let timelineEnd = 0;
@@ -58,6 +75,8 @@ export function mountOpening(root, { onStart, onComplete, initialSound = true, o
   let audioContext, audioBus, voices = [];
   let loadFailed = false;
   let grinPlayed = false;
+  let revealStarted = false;
+  let revealPrepared = false;
   const openingAudio = createOpeningAudio(import.meta.env.BASE_URL, () => updateSound());
   function updateSound() {
     soundButton.textContent = soundEnabled ? (openingAudio.blocked ? "点击开启声音" : "声音：开") : "声音：关";
@@ -431,57 +450,69 @@ export function mountOpening(root, { onStart, onComplete, initialSound = true, o
     ctx.restore();
     drawTable();
   }
-  function flyingCard(scale, y, angle) {
-    ctx.save();
-    ctx.translate(836, y);
-    ctx.rotate(angle);
-    ctx.scale(scale, scale);
-    ctx.shadowColor = "#0009";
-    ctx.shadowBlur = 20;
-    // 独立全脸牌，面部中心对准镜头；边缘超出屏幕且整脸可见。
-    ctx.drawImage(
+  function prepareFlightFrame() {
+    const width = root.clientWidth, height = root.clientHeight;
+    const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+    if (!flightLayout || flightLayout.width !== width || flightLayout.height !== height || flightPixelRatio !== pixelRatio) {
+      flightLayout = createOpeningFlightLayout(width, height);
+      flightPixelRatio = pixelRatio;
+      flightCanvas.width = Math.round(width * pixelRatio);
+      flightCanvas.height = Math.round(height * pixelRatio);
+      flightContext.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+      flightContext.imageSmoothingEnabled = true;
+      flightContext.imageSmoothingQuality = 'high';
+    }
+    flightCanvas.hidden = false;
+    flightContext.clearRect(0, 0, width, height);
+    return flightLayout;
+  }
+  function flyingCard({ x, y, scale, angle }, alpha = 1) {
+    flightContext.save();
+    flightContext.globalAlpha = alpha;
+    flightContext.translate(x, y);
+    flightContext.rotate(angle);
+    flightContext.scale(scale, scale);
+    flightContext.shadowColor = "#0009";
+    flightContext.shadowBlur = 20;
+    flightContext.drawImage(
       plate,
       0,
       0,
       plate.naturalWidth,
       plate.naturalHeight,
-      -124,
-      -180,
-      248,
-      372,
+      -OPENING_CARD.originX,
+      -OPENING_CARD.originY,
+      OPENING_CARD.width,
+      OPENING_CARD.height,
     );
-    ctx.restore();
-  }
-  // The same path is shared by the main card and its faint trailing samples.
-  function flightPose(progress) {
-    return {
-      scale: 0.12 + 6.78 * progress * progress,
-      y: 350 + 120 * smooth(progress),
-      angle: reduced ? 0 : -Math.PI * 4 * (1 - smooth(progress / 0.88)),
-    };
+    flightContext.restore();
   }
   function drawFlight(progress) {
     drawDarkStage();
-    ctx.save();
+    const layout = prepareFlightFrame();
     if (!reduced && progress > 0.12 && progress < 0.86) {
       const strength =
         0.075 * Math.sin(Math.PI * clamp((progress - 0.12) / 0.74));
       for (let i = 3; i >= 1; i--) {
-        const pose = flightPose(Math.max(0, progress - i * 0.018));
-        ctx.globalAlpha = strength * (1 - i * 0.2);
-        flyingCard(pose.scale, pose.y, pose.angle);
+        const pose = openingFlightPose(layout, Math.max(0, progress - i * 0.018), reduced);
+        flyingCard(pose, strength * (1 - i * 0.2));
       }
     }
-    ctx.globalAlpha = smooth(progress / 0.17);
-    const pose = flightPose(progress);
-    flyingCard(pose.scale, pose.y, pose.angle);
-    ctx.restore();
+    flyingCard(openingFlightPose(layout, progress, reduced), smooth(progress / 0.17));
   }
   function enterPhase(phase) {
     if (canvas.dataset.phase === phase) return;
     canvas.dataset.phase = phase;
+    root.dataset.openingPhase = phase;
     if (phase === "spin") whoosh(DURATIONS.flight - 0.06, 0.28);
     if (phase === "covered") {
+      if (!revealStarted) {
+        revealStarted = true;
+        Promise.resolve().then(onReveal).then(
+          () => { revealPrepared = true; },
+          () => { revealPrepared = true; },
+        );
+      }
       tone(115, 43, 0.35, 0.46);
       tone(240, 90, 0.12, 0.1);
     }
@@ -508,14 +539,15 @@ export function mountOpening(root, { onStart, onComplete, initialSound = true, o
     }
     root.classList.add("revealing");
     ctx.clearRect(0, 0, 1672, 941);
+    const layout = prepareFlightFrame();
     if (elapsed < ENDS.hold) {
       enterPhase("covered");
-      flyingCard(6.9, 470, 0);
+      flyingCard(openingRevealPose(layout, 0));
       return;
     }
     enterPhase("reveal");
     const progress = clamp((elapsed - ENDS.hold) / DURATIONS.reveal);
-    flyingCard(6.9, 470 + 2100 * progress ** 3, 0);
+    flyingCard(openingRevealPose(layout, progress));
     if (progress >= 1) finish();
   }
   function finish() {
@@ -524,18 +556,22 @@ export function mountOpening(root, { onStart, onComplete, initialSound = true, o
     stopAudio();
     state = "game";
     ctx.clearRect(0, 0, 1672, 941);
+    flightContext.clearRect(0, 0, flightLayout?.width || 0, flightLayout?.height || 0);
+    flightCanvas.hidden = true;
     root.classList.add("revealing");
     canvas.dataset.phase = "game";
+    root.dataset.openingPhase = 'game';
     status.textContent = "开场完成";
 
     pause.disabled = true;
     skipButton.hidden = true;
+    unlockScrolling();
     onComplete();
   }
-  function begin() {
+  function beginOriginal() {
     if (state !== "idle") return;
+    root.dataset.sceneMode = "original-transition";
     openingAudio.start();
-    onStart();
     if (reduced || loadFailed) { finish(); return; }
     unlockAudio();
     stopAudio();
@@ -550,6 +586,33 @@ export function mountOpening(root, { onStart, onComplete, initialSound = true, o
     status.textContent = "开场播放中";
     root.classList.remove("revealing");
     canvas.dataset.phase = "ready";
+    scheduleFrame();
+  }
+  const scene = createOpeningScene(root);
+  const choice = createOpeningChoice(root, {
+    reduced,
+    onCamera: value => scene.setProgress(value),
+    onStart: () => { unlockAudio(); onStart(); },
+    onChoose: mode => { tone(230, 140, 0.12, 0.06); onModeSelect(mode); },
+    onReturnToJoker: () => {
+      state = "idle";
+      beginOriginal();
+    },
+    onCancel: () => {
+      state = "idle";
+      startButton.hidden = false;
+      pause.disabled = loadFailed;
+      status.textContent = "等待开场";
+      scheduleFrame();
+    },
+  });
+  function begin() {
+    if (state !== "idle") return;
+    state = "choice";
+    startButton.hidden = true;
+    pause.disabled = true;
+    status.textContent = "镜头移向牌桌";
+    choice.open();
     scheduleFrame();
   }
   listen(skipButton, "click", () => {
@@ -577,8 +640,11 @@ export function mountOpening(root, { onStart, onComplete, initialSound = true, o
   function dispose() {
     if (disposed) return;
     disposed = true;
+    choice.dispose();
+    scene.dispose();
     cancelAnimationFrame(raf);
     listeners.abort();
+    unlockScrolling();
     openingAudio.dispose();
     stopAudio();
     audioContext?.close().catch(() => {});
@@ -603,16 +669,25 @@ export function mountOpening(root, { onStart, onComplete, initialSound = true, o
       if (state === "idle" && playing) time += delta;
       if (state === "transition") {
         elapsed += delta;
+        // Keep the whole viewport covered if mounting the selected game takes
+        // longer than the minimum hold, then resume from the same reveal pose.
+        if (revealStarted && !revealPrepared)
+          elapsed = Math.min(elapsed, ENDS.hold - 0.0001);
         if (playing && elapsed < DURATIONS.retreat) time += delta;
       }
     }
-    if (state === "idle") {
-      buildPose();
-      cover();
-      canvas.dataset.phase = "idle";
+    if (state === "idle" || state === "choice") {
+      if (!loadFailed) {
+        buildPose();
+        cover();
+      } else {
+        ctx.fillStyle = "#000";
+        ctx.fillRect(0, 0, 1672, 941);
+      }
+      canvas.dataset.phase = state === "idle" ? "idle" : "choice";
     } else if (state === "transition") transition();
     // No idle work once the reveal finishes or breathing is paused.
-    if (state === "transition" || (state === "idle" && playing))
+    if (state === "transition" || state === "choice" || (state === "idle" && playing))
       raf = requestAnimationFrame(tick);
   }
   const load = (img) =>

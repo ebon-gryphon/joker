@@ -1,6 +1,7 @@
 import { ref, computed } from 'vue'
 import { calcScore } from './useHandDetector.js'
 import { selectShopItems } from './shopSelection.js'
+import { encodeClassicSnapshot, decodeClassicSnapshot } from './classicSnapshot.js'
 
 // 52张牌堆
 const SUITS = ['♠', '♥', '♦', '♣']
@@ -17,10 +18,10 @@ function createDeck() {
   return deck
 }
 
-function shuffle(arr) {
+function shuffle(arr, random) {
   const a = [...arr]
   for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
+    const j = Math.floor(random() * (i + 1));
     [a[i], a[j]] = [a[j], a[i]]
   }
   return a
@@ -37,9 +38,9 @@ export const BLINDS = [
   { act: 3, name: '星河盲注', target: 2800, icon: '🌌', color: '#38bdf8' },
   { act: 3, name: '风暴盲注', target: 3800, icon: '🌪️', color: '#38bdf8' },
   { act: 3, name: '深渊盲注', target: 5000, icon: '🕳️', color: '#38bdf8' },
-  { act: 4, name: '王座盲注', target: 6500, icon: '🏰', color: '#f97316' },
-  { act: 4, name: '命运盲注', target: 8500, icon: '🎭', color: '#f97316' },
-  { act: 4, name: '终局盲注', target: 11000, icon: '👑', color: '#f97316' },
+  { act: 4, name: '王座盲注', target: 6000, icon: '🏰', color: '#f97316' },
+  { act: 4, name: '命运盲注', target: 7500, icon: '🎭', color: '#f97316' },
+  { act: 4, name: '终局盲注', target: 9000, icon: '👑', color: '#f97316' },
 ]
 
 export { JOKER_POOL } from './jokerCatalog.js'
@@ -47,7 +48,9 @@ import { JOKER_POOL, advanceJokers } from './jokerCatalog.js'
 
 export const SHOP_REROLL_COST = 2
 
-export function useGameState() {
+export function useGameState({ random = Math.random } = {}) {
+  if (typeof random !== 'function') throw new TypeError('random must be a function')
+  let pendingScore = null
   // 游戏阶段: playing | shop | won | lost
   const phase = ref('playing')
 
@@ -115,7 +118,7 @@ export function useGameState() {
   })
 
   function initRound() {
-    const freshDeck = shuffle(createDeck())
+    const freshDeck = shuffle(createDeck(), random)
     deck.value = freshDeck
     deckCount.value = freshDeck.length
     hand.value = []
@@ -125,6 +128,8 @@ export function useGameState() {
     discardsLeft.value = currentBlind.value.discards ?? 3
     blindScore.value = 0
     isScoring.value = false
+    pendingScore = null
+    currentHandType.value = null
     drawCards(8)
   }
 
@@ -139,7 +144,7 @@ export function useGameState() {
   }
 
   function toggleCard(cardId) {
-    if (isScoring.value) return
+    if (phase.value !== 'playing' || isScoring.value || !hand.value.some(card => card.id === cardId)) return
     const idx = selectedCards.value.indexOf(cardId)
     if (idx >= 0) {
       selectedCards.value = selectedCards.value.filter(id => id !== cardId)
@@ -165,15 +170,21 @@ export function useGameState() {
   }
 
   // 出牌（返回动画所需数据）
+  function validSelection() {
+    const ids = selectedCards.value
+    if (!Array.isArray(ids) || ids.length < 1 || ids.length > 5 || new Set(ids).size !== ids.length) return null
+    const cards = ids.map(id => hand.value.find(card => card.id === id))
+    return cards.some(card => !card) ? null : cards
+  }
+
   function playHand() {
     if (phase.value !== 'playing') return null
     if (isScoring.value) return null
     if (selectedCards.value.length === 0) return null
     if (handsLeft.value <= 0) return null
 
-    const selCards = selectedCards.value
-      .map(id => hand.value.find(c => c.id === id))
-      .filter(Boolean)
+    const selCards = validSelection()
+    if (!selCards) return null
 
     const result = calcScore(selCards, jokers.value, scoreContext.value)
     result.playedCards = selCards
@@ -185,13 +196,15 @@ export function useGameState() {
     selectedCards.value = []
     handsLeft.value--
     isScoring.value = true
+    pendingScore = result.score
     currentHandType.value = result.hand
 
     return result
   }
 
   function finishScoring(scoreDelta) {
-    if (phase.value !== 'playing') return []
+    if (phase.value !== 'playing' || !isScoring.value || pendingScore === null || scoreDelta !== pendingScore) return []
+    pendingScore = null
     blindScore.value += scoreDelta
     isScoring.value = false
 
@@ -228,6 +241,8 @@ export function useGameState() {
     if (discardsLeft.value <= 0) return []
     if (selectedCards.value.length === 0) return []
 
+    if (!validSelection()) return []
+
     const discarded = selectedCards.value
     hand.value = hand.value.filter(c => !discarded.includes(c.id))
     selectedCards.value = []
@@ -243,7 +258,7 @@ export function useGameState() {
   function generateShop() {
     // 首次进店和刷新均使用刚通关关卡的稀有度权重。
     const ownedIds = new Set(jokers.value.map(j => j.id))
-    shopItems.value = selectShopItems(JOKER_POOL, ownedIds, roundIndex.value)
+    shopItems.value = selectShopItems(JOKER_POOL, ownedIds, roundIndex.value, random)
     soldItems.value = new Set()
   }
 
@@ -267,6 +282,19 @@ export function useGameState() {
     const next = [...jokers.value]
     ;[next[index], next[target]] = [next[target], next[index]]
     jokers.value = next
+    return true
+  }
+
+  function replaceJoker(sellId, buyId) {
+    if (phase.value !== 'shop' || soldItems.value.has(buyId) || jokers.value.some(joker => joker.id === buyId)) return false
+    const sold = jokers.value.find(joker => joker.id === sellId)
+    const bought = shopItems.value.find(joker => joker.id === buyId)
+    if (!sold || !bought || jokers.value.length > 5) return false
+    const resale = Math.max(1, Math.floor(sold.price / 2))
+    if (money.value + resale < bought.price) return false
+    money.value += resale - bought.price
+    jokers.value = [...jokers.value.filter(joker => joker.id !== sellId), { ...bought, progress: 0 }]
+    soldItems.value = new Set([...soldItems.value, buyId])
     return true
   }
 
@@ -305,11 +333,45 @@ export function useGameState() {
     phase.value = 'playing'
   }
 
+  function createSnapshot() {
+    return encodeClassicSnapshot({
+      phase: phase.value, roundIndex: roundIndex.value, blindScore: blindScore.value,
+      money: money.value, handsLeft: handsLeft.value, discardsLeft: discardsLeft.value,
+      deck: deck.value, hand: hand.value, jokers: jokers.value,
+      shopItems: shopItems.value, soldItems: soldItems.value, lastReward: lastReward.value,
+      isScoring: isScoring.value,
+    }, BLINDS)
+  }
+
+  function restoreSnapshot(snapshot) {
+    if (isScoring.value) return false
+    const saved = decodeClassicSnapshot(snapshot, BLINDS)
+    if (!saved) return false
+    roundIndex.value = saved.roundIndex
+    blindScore.value = saved.blindScore
+    money.value = saved.money
+    handsLeft.value = saved.handsLeft
+    discardsLeft.value = saved.discardsLeft
+    deck.value = saved.deck
+    deckCount.value = saved.deck.length
+    hand.value = saved.hand
+    jokers.value = saved.jokers
+    shopItems.value = saved.shopItems
+    soldItems.value = saved.soldItems
+    lastReward.value = saved.lastReward
+    selectedCards.value = []
+    playedCards.value = []
+    currentHandType.value = null
+    pendingScore = null
+    phase.value = saved.phase
+    return true
+  }
+
   // 初始化
   initRound()
 
   return {
-    scoreContext, lastReward, moveJoker, sellJoker,
+    scoreContext, lastReward, moveJoker, sellJoker, replaceJoker, createSnapshot, restoreSnapshot,
     phase,
     roundIndex,
     blindScore,

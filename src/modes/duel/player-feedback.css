@@ -1,0 +1,38 @@
+/* Shared score details. Shop controls and transactions live in shop.css. */
+.duel-mode .duel-shell .score-breakdown {
+  margin: -5px 0 16px;
+  padding: 0 12px;
+  border: 1px solid #a08a7235;
+  border-radius: 3px;
+  background: #0d1b12cf;
+  color: #bcb7a3;
+  font-size: 11px;
+}
+.duel-mode .duel-shell .score-breakdown summary {
+  min-height: 40px;
+  padding: 10px 0;
+  color: #d6b590;
+  cursor: pointer;
+}
+.duel-mode .duel-shell .score-breakdown[open] summary { border-bottom: 1px solid #9c7e682e; }
+.duel-mode .duel-shell .score-breakdown ol { margin: 10px 0 12px; padding-left: 21px; line-height: 1.85; }
+.duel-mode .duel-shell .score-breakdown li + li { margin-top: 4px; }
+.duel-mode .duel-shell .score-breakdown li::marker { color: #bda669; }
+.duel-mode .duel-shell .growth-status {
+  display: inline-block;
+  max-width: 100%;
+  margin-top: 6px;
+  padding: 3px 6px;
+  border: 1px solid #c8b47b4f;
+  border-radius: 3px;
+  background: #bda36812;
+  color: #e4ce91;
+  font-size: 9px;
+  font-weight: 500;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.duel-mode .duel-shell .joker .growth-status { color: #e4ce91; margin-top: 6px; font-size: 9px; }
+.duel-mode .duel-shell .results { flex-wrap: wrap; gap: 15px 22px; }
+.duel-mode .duel-shell .settlement-actions { display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; }
+.duel-mode .duel-shell .settlement .clinch-notice { color: #e1c894; margin: 16px 0; }

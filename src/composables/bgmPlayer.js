@@ -4,8 +4,9 @@ export function createBgmPlayer(base, getVolume, AudioClass = globalThis.Audio) 
   let active = null, activeKey = null, request = 0
   function prepare(key) {
     if (!tracks.has(key)) {
-      const revision = key === 'main' ? '?v=electronic-v1' : ''
-      const audio = new AudioClass(`${base}audio/bgm/${key}.wav${revision}`)
+      const source = key === 'duel' ? 'duel.mp3?v=night-waltz-v1'
+        : key === 'main' ? 'main.wav?v=electronic-v1' : `${key}.wav`
+      const audio = new AudioClass(`${base}audio/bgm/${source}`)
       audio.preload = 'auto'
       audio.loop = key !== 'win' && key !== 'lose'
       audio.volume = 0
@@ -36,5 +37,9 @@ export function createBgmPlayer(base, getVolume, AudioClass = globalThis.Audio) 
       audio.play().catch(() => { if (request === id) activeKey = null })
     },
     applyVolume() { if (active) active.volume = getVolume() },
+    pause() {
+      ++request
+      for (const audio of tracks.values()) audio.pause()
+    },
   }
 }

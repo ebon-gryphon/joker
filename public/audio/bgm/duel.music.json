@@ -1,0 +1,19 @@
+{
+  "file": "duel.mp3",
+  "title": "Midnight at the Joker's Table",
+  "original_synthesis": true,
+  "bpm": 74,
+  "meter": "3/4",
+  "bars": 24,
+  "seconds": 58.378,
+  "sample_rate": 44100,
+  "peak_dbfs": -7.61,
+  "rms_dbfs": -20.82,
+  "clipped_samples": 0,
+  "loop_join_delta": 0.0,
+  "sections": [
+    "felt piano / sparse waltz",
+    "nylon answer / soft strings",
+    "piano return / plucked replies"
+  ]
+}

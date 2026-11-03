@@ -1,6 +1,6 @@
 <template>
   <section class="joker-area" aria-label="小丑牌组合">
-    <header><span class="joker-title">小丑牌 <b>{{ jokers.length }} / 5</b></span><span class="order-hint">从左到右结算</span><button class="catalog-link" @click="$emit('catalog')">图鉴 · {{ JOKER_POOL.length }} 张 ↗</button></header>
+    <header><span class="joker-title">小丑牌 <b>{{ jokers.length }} / 5</b></span><span class="order-hint">从左到右结算 · +倍率 → ×倍率</span><button class="catalog-link" @click="$emit('catalog')">图鉴 · {{ JOKER_POOL.length }} 张 ↗</button></header>
     <div class="joker-slots">
       <div v-for="i in 5" :key="i" class="joker-slot" :class="{ filled: jokers[i - 1] }">
         <template v-if="jokers[i - 1]">
@@ -48,6 +48,6 @@ header { display: flex; align-items: center; gap: 15px; max-width: 790px; margin
 .joker-empty { aspect-ratio: 2/3; border: 1px solid #b296573b; border-radius: 5px; box-shadow: inset 0 0 25px #0003; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #afaa8059; outline: 1px solid #a9934b17; outline-offset: -7px; gap: 14px; background: #02140b18; }
 .joker-empty span { font: 42px Georgia,serif; } .joker-empty small { font-size: 10px; letter-spacing: 2px; }
 @media(max-height:750px) { .joker-area { padding-top: 14px; } .joker-slots { max-width: 610px; } header { max-width: 650px; margin-bottom: 8px; } }
-@media(max-width:700px) { .joker-area { padding: 15px 18px 0; } .order-hint { display: none; } .joker-slots { gap: 8px; } .joker-title { font-size: 15px; } }
+@media(max-width:700px) { .joker-area { padding: 15px 18px 0; } header { flex-wrap: wrap; gap: 7px 12px; } .order-hint { order: 3; flex-basis: 100%; font-size: 10px; } .joker-slots { gap: 8px; } .joker-title { font-size: 15px; } }
 @media(max-width:700px) { .move-controls span { display: none; } .move-controls { justify-content: center; gap: 10px; } .joker-slot:first-child .joker-tooltip { left: 0; transform: none; } .joker-slot:last-child .joker-tooltip { left: auto; right: 0; transform: none; } }
 </style>

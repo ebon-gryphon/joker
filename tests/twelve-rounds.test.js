@@ -4,6 +4,7 @@ import { JOKER_POOL, advanceJokers } from '../src/composables/jokerCatalog.js'
 import { BLINDS, useGameState } from '../src/composables/useGameState.js'
 import { SHOP_RARITY_WEIGHTS, selectShopItems } from '../src/composables/shopSelection.js'
 import { calcScore } from '../src/composables/useHandDetector.js'
+import { clearBlindFixture } from './classic-transition-fixture.js'
 const j = id => ({ ...JOKER_POOL.find(j => j.id === id), progress:0 })
 const cards = (ranks, suits = []) => ranks.map((rank,id)=>({id,rank,suit:suits[id] || '♥'}))
 const fixtures = [
@@ -44,7 +45,7 @@ test('all twelve rounds transition, sixth is a shop, only twelfth wins',()=>{
   assert.equal(SHOP_RARITY_WEIGHTS.length, BLINDS.length-1)
   for (let round=0;round<12;round++) {
     assert.equal(game.roundIndex.value,round)
-    game.finishScoring(BLINDS[round].target)
+    clearBlindFixture(game)
     assert.equal(game.phase.value,round === 11 ? 'won' : 'shop')
     if(round < 11) game.skipShop()
   }

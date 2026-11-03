@@ -68,7 +68,9 @@ test('previews and AI never mutate growth, actual play grows once, across rounds
   assert.deepEqual(game.jokers.value.map(j => j.progress), [1,4])
   assert.equal(result.steps.at(-1).chips * result.steps.at(-1).mult, preview)
   assert.equal(game.playHand(), null)
-  game.finishScoring(300)
+  // Controlled prior-score fixture; completion still uses this actual hand once.
+  game.blindScore.value = game.currentBlind.value.target - result.score
+  game.finishScoring(result.score)
   game.skipShop()
   assert.deepEqual(game.jokers.value.map(j => j.progress), [1,4])
   game.selectedCards.value = [game.hand.value[0].id]
@@ -95,8 +97,11 @@ test('economy rewards require a valid discard or a cleared round', () => {
   game.selectedCards.value = [game.hand.value[0].id]
   game.discardCards()
   assert.equal(game.money.value, 6)
-  game.handsLeft.value = 2
-  game.finishScoring(300)
+  game.handsLeft.value = 3
+  game.hand.value = straight
+  game.selectedCards.value = straight.map(card => card.id)
+  const result = game.playHand()
+  game.finishScoring(result.score)
   assert.equal(game.money.value, 15)
   assert.deepEqual(game.lastReward.value, { base: 7, bonus: 2, total: 9 })
 })

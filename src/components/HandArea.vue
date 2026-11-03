@@ -4,6 +4,10 @@
       <template v-if="previewScore && !isScoring"><strong class="preview-name">{{ previewScore.hand?.name }}</strong><span>筹码 <b class="preview-chips">{{ previewScore.chips }}</b></span><span class="times">×</span><span>倍率 <b class="preview-mult">{{ previewScore.mult }}</b></span><span class="preview-total">预计 <b>{{ previewScore.score.toLocaleString() }}</b></span><span v-if="previewScore.score >= remainingScore" class="can-clear">可过关</span></template>
       <span v-else class="preview-idle">{{ isScoring ? '正在结算这一手…' : '选择 1—5 张手牌，查看牌型与预计得分' }}</span>
     </div>
+    <ScoreBreakdown v-if="previewScore?.hand && !isScoring" :result="previewScore" :cards="hand.filter(card => selectedCards.includes(card.id))" title="查看预计得分明细" />
+    <p v-if="orderImprovement > 0 && !isScoring" class="condition-hint order-optimization-hint" role="status">这手把加倍率牌移到乘倍率牌前，预计可多得 {{ orderImprovement.toLocaleString() }} 分；用小丑下方箭头调整。</p>
+    <p v-if="lastHandHint && !isScoring" class="condition-hint last-hand-hint" role="status">{{ lastHandHint }}</p>
+    <p v-if="conditionHint && !isScoring" class="condition-hint">{{ conditionHint }}</p>
     <div class="hand-cards" ref="handCardsRef">
       <CardView v-for="card in hand" :key="card.id" :card="card" :isSelected="selectedCards.includes(card.id)" selectable :disabled="isScoring || aiThinking" :ref="el => setCardRef(card.id, el)" @click="onCardClick(card)" />
     </div>
@@ -16,10 +20,34 @@
   </section>
 </template>
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import CardView from './CardView.vue'
+import ScoreBreakdown from './ScoreBreakdown.vue'
 import { playSfx } from '../composables/useAudio.js'
-const props = defineProps({ hand: Array, selectedCards: Array, selectedCount: Number, discardsLeft: Number, isScoring: Boolean, aiThinking: Boolean, previewScore: Object, remainingScore: Number })
+import { calcScore } from '../composables/useHandDetector.js'
+import { computerJokerOrder } from '../strategy/jokerPlanning.js'
+const props = defineProps({ hand: Array, selectedCards: Array, selectedCount: Number, discardsLeft: Number, isScoring: Boolean, aiThinking: Boolean, previewScore: Object, scoreContext: { type: Object, default: () => ({}) }, remainingScore: Number, jokers: { type: Array, default: () => [] }, handsLeft: Number })
+const orderImprovement = computed(() => {
+  if (!props.previewScore?.hand || props.selectedCards.length === 0) return 0
+  const cards = props.hand.filter(card => props.selectedCards.includes(card.id))
+  const orderedScore = calcScore(cards, computerJokerOrder(props.jokers), props.scoreContext).score
+  return Math.max(0, orderedScore - props.previewScore.score)
+})
+const lastHandHint = computed(() => {
+  if (props.handsLeft !== 1 || props.previewScore?.score >= props.remainingScore) return ''
+  const needed = Math.max(0, props.remainingScore - (props.previewScore?.score || 0)).toLocaleString()
+  const gap = props.previewScore ? `所选牌预计仍差 ${needed} 分` : `这一手需要 ${needed} 分`
+  return `最后一手 · ${gap}。${props.discardsLeft > 0 ? `还可弃牌 ${props.discardsLeft} 次，补牌随机。` : '可重新搭配手牌，确认预计得分后再出牌。'}`
+})
+const conditionHint = computed(() => {
+  const ids = new Set(props.jokers.map(j => j.id))
+  if (ids.has('empty_pockets') && props.discardsLeft > 0) return `孤注一掷：弃牌次数归零后才有 ×2；目前还剩 ${props.discardsLeft} 次。换回的牌随机。`
+  if (ids.has('phoenix') && (props.handsLeft !== 1 || props.discardsLeft > 0)) return '不死鸟：最后一手且弃牌次数归零才有 ×3，提前过关不会触发。'
+  if (ids.has('green_joker')) return '绿色小丑：每次出牌成长，弃牌会降低已积累的倍率。'
+  if (ids.has('banner')) return '节制旗帜：每剩一次弃牌加 8 筹码，弃牌前可以对比预计得分。'
+  if (ids.has('rebate')) return '回收员：每次使用弃牌获得 $1，但换回的牌仍是随机的。'
+  return ''
+})
 const emit = defineEmits(['selectCard', 'play', 'discard', 'sortByRank', 'sortBySuit', 'aiPlay'])
 const handCardsRef = ref(null), cardRefMap = ref({})
 function setCardRef(id, el) { if (el) cardRefMap.value[id] = el; else delete cardRefMap.value[id] }
@@ -29,6 +57,10 @@ function getCardEl(id) { return cardRefMap.value[id]?.$el || null }
 defineExpose({ handCardsRef, getCardEl, cardRefMap })
 </script>
 <style scoped>
+.condition-hint { color: #bfc4a7; font-size: 11px; line-height: 1.6; max-width: 920px; width: 100%; padding-top: 7px; }
+.last-hand-hint { color: #e5c28c; }
+.order-optimization-hint { color: #d9c28b; }
+.hand-area > .score-breakdown { margin-top: 7px; }
 .hand-area { padding: 0 clamp(18px,4vw,65px) 24px; display: flex; flex-direction: column; align-items: center; position: relative; z-index: 10; min-width: 0; }
 .hand-preview { min-height: 50px; max-width: 100%; display: flex; align-items: center; justify-content: center; gap: 13px; padding: 9px 22px; color: #bdb69e; background: #0a1613bb; border: 1px solid #9b854c80; box-shadow: inset 0 0 0 4px #a58e4a08; font-size: 12px; border-radius: 2px; }
 .preview-name { font: 20px var(--font-display); color: #e8d5a6; padding-right: 15px; border-right: 1px solid #ad97614a; } .hand-preview b { font: 26px Georgia,serif; margin-left: 5px; } .preview-chips { color: var(--chips-from); } .preview-mult { color: var(--mult-from); } .preview-total { padding-left: 14px; border-left: 1px solid #ad97614a; } .preview-total b { color: var(--gold); } .can-clear { font-size: 11px; color: #b8d8b2; padding: 4px 8px; border: 1px solid #5c8961; background: #34583c55; } .preview-idle { color: #b5ad94; letter-spacing: 2px; font-size: 12px; }

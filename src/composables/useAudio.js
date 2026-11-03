@@ -10,7 +10,10 @@ const bgmMuted = ref(false)
 let audioCtx = null
 let sfxGainNode = null
 const sfxCache = new Map()
+const activeSfx = new Set()
+let sfxRequest = 0
 let aiLoopSrc = null
+let aiLoopRequest = 0
 let bgmPlayer
 function getBgmPlayer() {
   return bgmPlayer ??= createBgmPlayer(import.meta.env.BASE_URL,
@@ -18,6 +21,7 @@ function getBgmPlayer() {
 }
 export function prepareBgm(key) { getBgmPlayer().prepare(key) }
 export function unlockBgm(key) { getBgmPlayer().unlock(key) }
+export function pauseBgm() { bgmPlayer?.pause() }
 
 // 启动时从 localStorage 读取设置
 ;(function loadFromStorage() {
@@ -32,7 +36,10 @@ export function unlockBgm(key) { getBgmPlayer().unlock(key) }
 
 // 必须在用户首次交互后调用（浏览器自动播放策略限制）
 export function initAudio() {
-  if (audioCtx) return
+  if (audioCtx) {
+    if (audioCtx.state === 'suspended') audioCtx.resume().catch(() => {})
+    return
+  }
   try {
     audioCtx = new (window.AudioContext || window.webkitAudioContext)()
     sfxGainNode = audioCtx.createGain()
@@ -58,20 +65,30 @@ async function loadSfxBuffer(name) {
 
 export function playSfx(name) {
   if (!audioCtx || !sfxGainNode) return
+  const request = sfxRequest
   loadSfxBuffer(name).then(buf => {
-    if (!buf) return
+    if (!buf || request !== sfxRequest) return
     const src = audioCtx.createBufferSource()
     src.buffer = buf
     src.connect(sfxGainNode)
+    activeSfx.add(src)
+    src.onended = () => activeSfx.delete(src)
     src.start()
   })
 }
 
+export function pauseSfx() {
+  ++sfxRequest
+  for (const src of activeSfx) { try { src.stop() } catch {} }
+  activeSfx.clear()
+}
+
 export function startAiLoop() {
   if (!audioCtx || !sfxGainNode) return
+  stopAiLoop()
+  const request = aiLoopRequest
   loadSfxBuffer('ai-loop').then(buf => {
-    if (!buf) return
-    stopAiLoop()
+    if (!buf || request !== aiLoopRequest) return
     const src = audioCtx.createBufferSource()
     src.buffer = buf
     src.loop = true
@@ -82,6 +99,7 @@ export function startAiLoop() {
 }
 
 export function stopAiLoop() {
+  ++aiLoopRequest
   if (!aiLoopSrc) return
   try { aiLoopSrc.stop() } catch {}
   aiLoopSrc = null
@@ -101,5 +119,5 @@ export function applyAudioSettings(s) {
 }
 
 export function useAudio() {
-  return { sfxVolume, bgmVolume, sfxMuted, bgmMuted, initAudio, playSfx, startAiLoop, stopAiLoop, playBgm, applyAudioSettings }
+  return { sfxVolume, bgmVolume, sfxMuted, bgmMuted, initAudio, playSfx, pauseSfx, startAiLoop, stopAiLoop, playBgm, pauseBgm, applyAudioSettings }
 }

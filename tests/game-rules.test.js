@@ -4,6 +4,7 @@ import assert from 'node:assert/strict'
 import { findBestPlay } from '../src/composables/useAI.js'
 import { BLINDS, JOKER_POOL, SHOP_REROLL_COST, useGameState } from '../src/composables/useGameState.js'
 import { calcScore } from '../src/composables/useHandDetector.js'
+import { clearBlindFixture } from './classic-transition-fixture.js'
 
 function cards(...entries) {
   return entries.map(([rank, suit], id) => ({ id, rank, suit }))
@@ -16,7 +17,7 @@ function joker(id) {
 test('the extended run has four acts and steadily rising targets', () => {
   assert.equal(BLINDS.length, 12)
   assert.deepEqual(BLINDS.map(blind => blind.act), [1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4])
-  assert.deepEqual(BLINDS.map(blind => blind.target), [250, 400, 650, 950, 1400, 2000, 2800, 3800, 5000, 6500, 8500, 11000])
+  assert.deepEqual(BLINDS.map(blind => blind.target), [250, 400, 650, 950, 1400, 2000, 2800, 3800, 5000, 6000, 7500, 9000])
   assert.ok(BLINDS.every((blind, index) => index === 0 || blind.target > BLINDS[index - 1].target))
 })
 
@@ -83,7 +84,7 @@ test('the last configured blind ends the run', () => {
   const finalIndex = BLINDS.length - 1
 
   game.roundIndex.value = finalIndex
-  game.finishScoring(BLINDS[finalIndex].target)
+  clearBlindFixture(game)
 
   assert.equal(game.phase.value, 'won')
 })

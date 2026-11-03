@@ -13,9 +13,11 @@
       </div>
 
       <!-- 统计 -->
+      <p class="end-subtitle">到达第 {{ roundNumber }} / {{ totalRounds }} 关 · {{ currentBlind.name }}</p>
+      <p v-if="!isWon" class="end-deficit">离目标还差 {{ Math.max(0, currentBlind.target - blindScore).toLocaleString() }} 分<span v-if="discardsLeft > 0"> · 剩余 {{ discardsLeft }} 次弃牌</span></p>
       <div class="end-stats">
         <div class="end-stat">
-          <div class="end-stat-label">最终得分</div>
+          <div class="end-stat-label">本关得分</div>
           <div class="end-stat-value">{{ blindScore }}</div>
         </div>
         <div class="end-stat">
@@ -32,6 +34,8 @@
         </div>
       </div>
 
+      <ScoreBreakdown v-if="lastHand" :result="lastHand.result" :cards="lastHand.cards" title="复盘最后一手" />
+
       <!-- 重新开始 -->
       <button class="px-btn btn-restart" @click="$emit('restart')">
         再来一局
@@ -41,12 +45,17 @@
 </template>
 
 <script setup>
+import ScoreBreakdown from './ScoreBreakdown.vue'
 defineProps({
   isWon: { type: Boolean, required: true },
   blindScore: { type: Number, required: true },
   currentBlind: { type: Object, required: true },
   money: { type: Number, required: true },
   jokerCount: { type: Number, required: true },
+  roundNumber: { type: Number, required: true },
+  totalRounds: { type: Number, required: true },
+  discardsLeft: { type: Number, default: 0 },
+  lastHand: { type: Object, default: null },
 })
 
 defineEmits(['restart'])
@@ -72,6 +81,8 @@ defineEmits(['restart'])
   border-radius: 4px;
   max-width: 480px;
   width: 90%;
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
   animation: end-appear 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
 
@@ -122,6 +133,7 @@ defineEmits(['restart'])
   color: rgba(255,255,255,0.7);
   text-align: center;
 }
+.end-deficit { color: #e6bc92; font-size: 13px; text-align: center; line-height: 1.6; }
 
 /* 统计 */
 .end-stats {
@@ -159,5 +171,11 @@ defineEmits(['restart'])
   font-size: 18px;
   padding: 16px 40px;
   margin-top: 8px;
+}
+@media (max-height: 750px), (max-width: 600px) {
+  .end-content { padding: 24px; gap: 14px; }
+  .end-icon { font-size: 48px; }
+  .end-subtitle { font-size: 14px; }
+  .end-stat { padding: 10px; }
 }
 </style>

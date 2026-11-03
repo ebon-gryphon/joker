@@ -2,6 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { JOKER_POOL, useGameState } from '../src/composables/useGameState.js'
 import { SHOP_RARITY_WEIGHTS, selectShopItems } from '../src/composables/shopSelection.js'
+import { clearBlindFixture } from './classic-transition-fixture.js'
 
 function seededRandom(seed = 12345) {
   return () => {
@@ -40,10 +41,9 @@ test('owned cards are excluded and exhausted categories redistribute without unl
   assert.deepEqual(selectShopItems(JOKER_POOL, new Set(JOKER_POOL.map(item => item.id)), 4), [])
 })
 
-test('opening and rerolling a shop both use the cleared round, without advancing it', t => {
-  const game = useGameState()
-  t.mock.method(Math, 'random', () => 0.99)
-  game.finishScoring(300)
+test('opening and rerolling a shop both use the cleared round, without advancing it', () => {
+  const game = useGameState({ random: () => 0.99 })
+  clearBlindFixture(game)
   assert.equal(game.phase.value, 'shop')
   assert.ok(game.shopItems.value.every(item => item.rarity === 'rare'))
   assert.equal(game.rerollShop(), true)

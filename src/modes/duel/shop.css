@@ -1,0 +1,264 @@
+/* Between rounds, the same dim card room becomes a shared market.
+   Green and worn red identify the seats; purchases stay in ShopPanel. */
+.duel-mode .shop-screen {
+  --shop-copper: #ae895b;
+  --shop-ink: #101810;
+  --shop-ivory: #e2d4b9;
+  --shop-muted: #b0ab96;
+  padding: 8px 0 20px;
+  animation: duel-score-in .4s ease-out;
+}
+.duel-mode .shop-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin: 21px 0 24px;
+}
+.duel-mode .shop-heading .eyebrow { color: #b5966b; letter-spacing: 4px; }
+.duel-mode .shop-heading h2 {
+  margin: 10px 0 0;
+  color: #e7dcc3;
+  font-size: clamp(23px, 2.5vw, 34px);
+  line-height: 1.4;
+  letter-spacing: 3px;
+}
+.duel-mode .shop-heading p { margin: 10px 0 0; color: var(--shop-muted); font-size: 11px; line-height: 1.8; }
+.duel-mode .shop-round-result {
+  display: flex;
+  flex-shrink: 0;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  min-width: 180px;
+  padding: 11px 24px;
+  border-inline: 1px solid #a77c5752;
+  color: #b3ad97;
+  font-size: 10px;
+  letter-spacing: 2px;
+  font-variant-numeric: tabular-nums;
+}
+.duel-mode .shop-round-result strong { color: #e8d8c3; font: 28px Georgia, serif; letter-spacing: 1px; }
+.duel-mode .shop-round-result small { padding: 0 10px; color: #a97661; font-size: 18px; }
+.duel-mode .shop-turn-banner {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-height: 86px;
+  padding: 17px 23px;
+  border: 1px solid #8a9b715c;
+  border-left: 3px solid #a6b18b;
+  background: linear-gradient(105deg, #213523e8, #101c13d9 66%, #0c120d99);
+  box-shadow: 0 8px 30px #0003;
+}
+.duel-mode .shop-turn-icon {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  color: #d0d6bc;
+  font: 30px Georgia, serif;
+}
+.duel-mode .shop-turn-banner strong, .duel-mode .shop-turn-banner small { display: block; }
+.duel-mode .shop-turn-banner > div { flex: 1; min-width: 0; }
+.duel-mode .shop-pass { flex-shrink: 0; min-height: 40px; padding: 8px 13px; border: 1px solid #ba947355; background: #172116c9; color: #c6b39e; font-size: 10px; white-space: nowrap; }
+.duel-mode .shop-turn-banner strong { color: #eadfce; font-size: 15px; font-weight: 500; letter-spacing: 1px; }
+.duel-mode .shop-turn-banner small { margin-top: 5px; color: #b8b49e; font-size: 11px; line-height: 1.7; }
+.duel-mode .shop-turn-banner.bot-turn { border-color: #9c614a65; border-left-color: #b98166; background: linear-gradient(105deg, #3b231ae8, #1f1711d9 66%, #0c120d99); }
+.duel-mode .bot-turn .shop-turn-icon { color: #d9ac91; }
+.duel-mode .shop-turn-banner.shopping-done { border-color: #bc8f6059; border-left-color: #c69c72; background: linear-gradient(105deg, #302d1fe8, #1b1d13d9 66%, #0c120d99); }
+.duel-mode .shopping-done .shop-turn-icon { color: #d8b58c; }
+.duel-mode .shop-steps { display: flex; flex-wrap: wrap; align-items: center; gap: 9px; margin: 11px 0 0; color: #aaa58e; font-size: 10px; }
+.duel-mode .shop-steps span { padding: 5px 9px; }
+.duel-mode .shop-steps span.active { color: #e7cfb0; background: #b98c6217; box-shadow: inset 0 -1px #b98c6270; }
+.duel-mode .shop-layout { display: grid; grid-template-columns: minmax(180px, .74fr) minmax(450px, 2.15fr) minmax(180px, .74fr); align-items: start; gap: 24px; margin-top: 28px; }
+.duel-mode .shop-player {
+  --seat-accent: #b1bf9d;
+  --seat-edge: #899f6455;
+  min-width: 0;
+  padding: 18px 15px;
+  border-top: 2px solid var(--seat-edge);
+  border-bottom: 1px solid var(--seat-edge);
+  background: linear-gradient(150deg, #243623a8, #111c12b3 65%);
+  transition: border-color .25s, background .25s;
+}
+.duel-mode .shop-player.joker-shop-seat { --seat-accent: #d1a18a; --seat-edge: #9d644d66; background: linear-gradient(210deg, #3c271ca8, #1d1711b3 65%); }
+.duel-mode .shop-player.active-player { border-top-color: var(--seat-accent); background-color: #ffffff05; }
+.duel-mode .shop-player h2 { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; color: var(--seat-accent); font: 500 15px/1.6 'Noto Serif SC', 'Songti SC', serif; }
+.duel-mode .shop-wallet { display: inline-flex; align-items: center; gap: 5px; color: #e9c495; font: 23px Georgia, serif; font-variant-numeric: tabular-nums; }
+.duel-mode .shop-player-note { margin: 9px 0 12px; color: #b2ae97; font-size: 10px; line-height: 1.7; }
+.duel-mode .shop-build-details { margin: 0; }
+.duel-mode .shop-build-summary { min-height: 40px; padding: 6px 0 10px; color: #c8c1a9; font-size: 10px; line-height: 1.7; cursor: pointer; }
+.duel-mode .shop-build-details[open] > .shop-build-summary { margin-bottom: 10px; border-bottom: 1px solid #a8896b2b; }
+.duel-mode .compact-lineup { display: inline-flex; flex-wrap: wrap; vertical-align: middle; gap: 4px; max-width: 100%; margin-top: 5px; }
+.duel-mode .compact-lineup > span { padding: 2px 5px; background: #ffffff06; color: #b9b59f; font-size: 9px; }
+.duel-mode .joker-order-help { color: #b5b19b; font-size: 10px; line-height: 1.7; }
+.duel-mode .shop-build { display: flex; flex-direction: column; gap: 8px; padding: 0; margin: 0; }
+.duel-mode .shop-owned { display: flex; align-items: flex-start; gap: 9px; min-width: 0; padding: 9px 7px; border: 1px solid #8e8e5a35; background: #070d0860; }
+.duel-mode .duel-shell .shop-owned img.joker-illustration { width: 36px; height: 54px; flex: 0 0 36px; object-fit: cover; border-radius: 2px; box-shadow: 1px 3px 5px #0005; }
+.duel-mode .shop-owned > div { flex: 1; min-width: 0; }
+.duel-mode .shop-owned strong, .duel-mode .shop-owned small { display: block; overflow-wrap: anywhere; }
+.duel-mode .shop-owned strong { color: #e2d4c3; font-size: 11px; font-weight: 500; line-height: 1.5; }
+.duel-mode .shop-owned small { margin-top: 4px; color: #b4ae97; font-size: 9px; line-height: 1.6; }
+.duel-mode .joker-growth { display: inline-block; margin-top: 6px; padding: 3px 6px; border: 1px solid #b992663a; background: #ae895b10; color: #d7b48a; font-size: 9px; line-height: 1.5; }
+.duel-mode .shop-owned small.joker-growth { color: #d7b48a; }
+.duel-mode .joker-order-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; margin-top: 7px; color: #b5af98; font-size: 9px; }
+.duel-mode .order-button, .duel-mode .sell-joker { min-height: 40px; border: 1px solid #86865c61; border-radius: 3px; background: #1c281c; color: #d4cdb6; }
+.duel-mode .order-button { min-width: 40px; padding: 6px 8px; font-size: 11px; }
+.duel-mode .sell-joker { margin-top: 6px; padding: 6px 9px; color: #d7b794; font-size: 9px; }
+.duel-mode .shop-shelf { min-width: 0; padding: 0 0 12px; }
+.duel-mode .shop-shelf-title { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin: 0 0 14px; padding-bottom: 12px; border-bottom: 1px solid #a77c5745; }
+.duel-mode .shop-shelf-title h2 { color: #e4d2ba; font-size: 21px; letter-spacing: 3px; }
+.duel-mode .shop-shelf-title small { color: #b2ac95; font-size: 10px; }
+.duel-mode .shop-probabilities { display: flex; flex-wrap: wrap; align-items: center; gap: 5px 13px; margin: 0 0 16px; color: #bab29a; font-size: 9px; }
+.duel-mode .shop-probabilities > span:first-child { color: #a4a18a; }
+.duel-mode .shop-probabilities b { margin-left: 3px; color: #d6b590; font-weight: 500; }
+.duel-mode .shop-products { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: stretch; gap: 13px; }
+.duel-mode .shop-product {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 14px 12px 12px;
+  border: 1px solid #89764f;
+  border-radius: 3px;
+  background: linear-gradient(145deg,#293323e8,#151f15ef 70%);
+  box-shadow: 0 9px 22px #0005, inset 0 0 0 3px #a58a4910;
+  transition: transform .2s, border-color .2s, box-shadow .2s;
+}
+.duel-mode .shop-product:not(.sold):hover { transform: translateY(-4px); border-color: #b4a071; box-shadow: 0 12px 26px #0007, inset 0 0 0 3px #a58a4922; }
+.duel-mode .shop-product.chosen { border-color: #d1ba86; box-shadow: 0 0 0 2px #d1ba8688, 0 10px 25px #0005; }
+.duel-mode .product-lot { color: #aaa383; font: 9px Georgia, serif; letter-spacing: 2px; }
+.duel-mode .product-art { position: relative; display: flex; align-items: center; justify-content: center; min-height: 191px; margin: 5px -3px 12px; background: radial-gradient(ellipse, #9a8d5b17, transparent 70%); }
+.duel-mode .duel-shell .product-art img.joker-illustration { width: 106px; height: 159px; max-width: 100%; flex: 0 0 auto; object-fit: cover; border-radius: 3px; box-shadow: 3px 5px 9px #05080580; transition: filter .2s, opacity .2s; }
+.duel-mode .ownership { position: absolute; right: -7px; bottom: 6px; left: -7px; padding: 8px 3px; border: 1px solid #bc8c66; background: #2a2316f5; color: #e6c5a1; box-shadow: 0 3px 7px #0003; text-align: center; font-size: 9px; line-height: 1.6; }
+.duel-mode .product-meta { display: flex; flex: 1; flex-direction: column; align-items: flex-start; min-width: 0; }
+.duel-mode .product-meta .rarity { display: inline-block; margin-bottom: 6px; color: #b2ad93; font-size: 9px; letter-spacing: 1px; }
+.duel-mode .shop-product.rare .rarity { color: #adb68d; }
+.duel-mode .shop-product.legendary .rarity { color: #d3ac73; }
+.duel-mode .product-meta h3 { display: block; margin: 0; color: #e0d5bb; font: 600 15px/1.5 'Noto Serif SC', 'Songti SC', serif; overflow-wrap: anywhere; }
+.duel-mode .product-meta p { flex: 1; margin: 8px 0 13px; color: #b8b19a; font-size: 10px; line-height: 1.85; overflow-wrap: anywhere; }
+.duel-mode .product-price { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin: 3px 0 12px; padding-top: 10px; border-top: 1px solid #a28b5245; color: #d8bd88; font: 24px Georgia, serif; font-variant-numeric: tabular-nums; }
+.duel-mode .shop-product > .primary { width: 100%; min-height: 42px; margin-top: auto; padding: 9px 5px; border: 1px solid #ae8056; border-radius: 2px; background: linear-gradient(115deg, #71382b, #44271e); color: #f0dfc2; box-shadow: 0 3px 7px #00000040; font-size: 11px; letter-spacing: 1px; }
+.duel-mode .shop-product > .primary:disabled { opacity: 1; border-color: #77826450; background: #293527dd; color: #a3a58d; box-shadow: none; }
+.duel-mode .shop-product.sold { border-color: #73806350; background: linear-gradient(160deg, #1a251a, #111a11); box-shadow: none; }
+.duel-mode .shop-product.sold .product-lot, .duel-mode .shop-product.sold .rarity { color: #9da28b; }
+.duel-mode .shop-product.sold .product-art img.joker-illustration { filter: grayscale(.85) brightness(.7); opacity: .55; box-shadow: 2px 3px 6px #0003; }
+.duel-mode .shop-product.sold .product-meta h3, .duel-mode .shop-product.sold .product-price { color: #b4b19b; }
+.duel-mode .shop-product.sold .product-meta p { color: #9da18a; }
+.duel-mode .shop-product.sold > .primary { border-color: #78806648; background: #10170fa8; color: #aaa98f; }
+.duel-mode .shop-feedback { min-height: 19px; margin: 12px 0 0; color: #b7af97; text-align: center; font-size: 10px; line-height: 1.8; }
+.duel-mode .shop-feedback.shop-error { color: #e1a88e; }
+.duel-mode .shop-controls { position: sticky; bottom: 12px; z-index: 20; display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 20px; padding: 15px 18px; border: 1px solid #af815c70; border-radius: 3px; background: #111b12f5; box-shadow: 0 6px 24px #0006; backdrop-filter: blur(12px); }
+.duel-mode .shop-controls > span { flex: 1 1 210px; color: #beb79f; font-size: 11px; line-height: 1.8; }
+.duel-mode .shop-controls .primary, .duel-mode .shop-controls .secondary { min-width: 150px; min-height: 44px; padding: 10px 17px; font-size: 12px; }
+.duel-mode .shop-controls .secondary, .duel-mode .replacement-heading .secondary { border-color: #a4866f59; background: #1b271b; color: #d0c7af; }
+.duel-mode .shop-controls .primary, .duel-mode .replacement-confirm { border-color: #c49c72; background: linear-gradient(115deg, #71382b, #44271e); color: #f0dfc2; }
+.duel-mode .shop-controls .shop-compact-wallet { display: flex; flex: 0 1 auto; flex-wrap: wrap; align-items: center; gap: 5px 12px; color: #b4ab92; font-size: 10px; }
+.duel-mode .shop-compact-wallet b { color: #e8c596; font-weight: 500; font-variant-numeric: tabular-nums; }
+.duel-mode .shop-activity { display: flex; flex-direction: column; gap: 5px; margin-top: 20px; padding: 13px 0 13px 15px; border-left: 1px solid #9b765448; color: #b2a78f; font-size: 11px; line-height: 1.7; }
+.duel-mode .shop-activity p { margin: 0; }
+.duel-mode .shop-activity p:first-child { color: #c7b69b; }
+/* Replacement is a single transaction. Its confirmation stays visible without
+   the shopping footer covering any of the choices. */
+.duel-mode .replacement-picker { margin-top: 20px; padding: 18px; border: 1px solid #c4996da6; border-radius: 3px; background: #192319; box-shadow: 0 8px 28px #0004; scroll-margin-top: 64px; }
+.duel-mode .replacement-heading { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 14px; }
+.duel-mode .replacement-heading h3 { margin: 3px 0 0; color: #ecd6b8; font: 500 15px/1.6 'Noto Serif SC', serif; }
+.duel-mode .replacement-heading p { color: #bcb29a; font-size: 11px; line-height: 1.7; }
+.duel-mode .replacement-heading .compact { min-height: 40px; padding: 8px 12px; font-size: 11px; }
+.duel-mode .replacement-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
+.duel-mode .replacement-option { display: flex; align-items: center; gap: 9px; min-width: 0; min-height: 83px; padding: 10px; border: 1px solid #8d865e77; border-radius: 3px; background: #101b11; color: #c8c1a9; text-align: left; }
+.duel-mode .replacement-option.selected { border-color: #ddb380; background: #353824; box-shadow: inset 0 0 0 1px #ddb38045; }
+.duel-mode .replacement-option.unaffordable { border-style: dashed; color: #a2a48c; }
+.duel-mode .replacement-option img.joker-illustration { width: 38px; height: 57px; flex: 0 0 38px; border-radius: 2px; object-fit: cover; }
+.duel-mode .replacement-option-copy { flex: 1; min-width: 0; }
+.duel-mode .replacement-option-copy strong, .duel-mode .replacement-option-copy small { display: block; overflow-wrap: anywhere; }
+.duel-mode .replacement-option-copy strong { color: #ded0b4; font-size: 11px; font-weight: 500; line-height: 1.6; }
+.duel-mode .replacement-option-copy small { margin-top: 4px; color: #b5ab92; font-size: 9px; line-height: 1.6; }
+.duel-mode .replacement-option-price { color: #e5bd8e; font-size: 11px; line-height: 1.7; text-align: right; font-variant-numeric: tabular-nums; }
+.duel-mode .replacement-option-price span, .duel-mode .replacement-option-price strong, .duel-mode .replacement-option-price small { display: block; }
+.duel-mode .replacement-summary { margin: 13px 0 11px; color: #c4b79c; font-size: 11px; line-height: 1.8; }
+.duel-mode .replacement-confirm { position: sticky; bottom: max(8px, env(safe-area-inset-bottom)); z-index: 21; width: 100%; min-height: 44px; font-size: 12px; box-shadow: 0 4px 16px #0004; }
+.duel-mode .choosing-replacement .shop-controls { position: static; }
+@media (max-width: 1150px) {
+  .duel-mode .shop-layout { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+  .duel-mode .shop-layout > .shop-player:first-child { grid-column: 1; grid-row: 2; }
+  .duel-mode .shop-layout > .shop-player:last-child { grid-column: 2; grid-row: 2; }
+  .duel-mode .shop-shelf { grid-column: 1 / -1; grid-row: 1; }
+  .duel-mode .shop-build { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
+  .duel-mode .shop-product { padding: 17px; }
+  .duel-mode .product-art { min-height: 205px; }
+  .duel-mode .duel-shell .product-art img.joker-illustration { width: 120px; height: 180px; }
+  .duel-mode .product-meta p { font-size: 11px; min-height: 41px; }
+}
+@media (max-width: 760px) {
+  .duel-mode .shop-heading { gap: 15px; }
+  .duel-mode .shop-round-result { min-width: 140px; padding: 10px 15px; }
+  .duel-mode .shop-round-result strong { font-size: 23px; }
+  .duel-mode .shop-build { grid-template-columns: 1fr; }
+  .duel-mode .shop-products { gap: 11px; }
+  .duel-mode .shop-product { padding: 12px 9px; }
+  .duel-mode .product-art { min-height: 166px; }
+  .duel-mode .duel-shell .product-art img.joker-illustration { width: 98px; height: 147px; }
+  .duel-mode .product-meta h3 { font-size: 14px; }
+  .duel-mode .product-meta p { font-size: 10px; }
+}
+@media (max-width: 600px) {
+  .duel-mode .shop-heading { flex-direction: column; align-items: flex-start; gap: 16px; margin: 16px 0 20px; }
+  .duel-mode .shop-heading h2 { font-size: 24px; letter-spacing: 1px; }
+  .duel-mode .shop-heading .eyebrow { font-size: 8px; letter-spacing: 3px; }
+  .duel-mode .shop-heading p { font-size: 10px; }
+  .duel-mode .shop-round-result { flex-direction: row; align-self: stretch; justify-content: space-between; min-width: 0; padding: 10px 14px; border-inline: 0; border-block: 1px solid #a77c5735; background: #ffffff03; }
+  .duel-mode .shop-turn-banner { min-height: 80px; gap: 10px; padding: 14px 12px; }
+  .duel-mode .shop-turn-icon { flex-basis: 28px; width: 28px; font-size: 25px; }
+  .duel-mode .shop-turn-banner strong { font-size: 13px; }
+  .duel-mode .shop-turn-banner small { font-size: 10px; }
+  .duel-mode .shop-steps { gap: 4px; font-size: 9px; }
+  .duel-mode .shop-steps span { padding: 4px 5px; }
+  .duel-mode .shop-layout { gap: 12px; margin-top: 22px; }
+  .duel-mode .shop-player { padding: 13px 9px; }
+  .duel-mode .shop-player h2 { font-size: 13px; }
+  .duel-mode .shop-wallet { font-size: 20px; }
+  .duel-mode .shop-player-note { font-size: 9px; }
+  .duel-mode .shop-owned { gap: 7px; padding: 7px 5px; }
+  .duel-mode .duel-shell .shop-owned img.joker-illustration { width: 28px; height: 42px; flex-basis: 28px; }
+  .duel-mode .shop-owned strong { font-size: 10px; }
+  .duel-mode .shop-owned small { font-size: 9px; }
+  .duel-mode .shop-shelf-title { gap: 8px; margin-bottom: 11px; }
+  .duel-mode .shop-shelf-title h2 { font-size: 18px; letter-spacing: 2px; }
+  .duel-mode .shop-shelf-title small { font-size: 9px; }
+  .duel-mode .shop-probabilities { gap: 5px 9px; font-size: 9px; }
+  .duel-mode .shop-products { grid-template-columns: 1fr; gap: 12px; }
+  .duel-mode .shop-product { display: grid; grid-template-columns: 90px minmax(0, 1fr) 76px; column-gap: 13px; align-items: center; padding: 14px 12px; }
+  .duel-mode .product-lot { position: absolute; top: 9px; right: 10px; font-size: 8px; }
+  .duel-mode .product-art { grid-column: 1; grid-row: 1 / 4; min-height: 141px; margin: 0; }
+  .duel-mode .duel-shell .product-art img.joker-illustration { width: 88px; height: 132px; }
+  .duel-mode .ownership { right: -5px; left: -5px; bottom: 3px; padding: 6px 2px; font-size: 8px; }
+  .duel-mode .product-meta { grid-column: 2 / 4; grid-row: 1; align-self: start; padding-top: 13px; }
+  .duel-mode .product-meta .rarity { margin-bottom: 4px; font-size: 9px; }
+  .duel-mode .product-meta h3 { font-size: 16px; }
+  .duel-mode .product-meta p { min-height: 0; margin: 6px 0 9px; font-size: 10px; line-height: 1.7; }
+  .duel-mode .product-price { grid-column: 2; grid-row: 2; margin: 0; padding: 0; border: 0; font-size: 24px; }
+  .duel-mode .shop-product > .primary { grid-column: 3; grid-row: 2; margin: 0; min-height: 42px; padding: 8px 4px; font-size: 11px; line-height: 1.5; letter-spacing: 0; white-space: normal; overflow-wrap: anywhere; }
+  .duel-mode .sell-joker { width: 100%; margin-top: 7px; padding: 7px 5px; }
+  .duel-mode .shop-controls { bottom: max(6px, env(safe-area-inset-bottom)); gap: 9px; padding: 12px; }
+  .duel-mode .shop-controls > span { flex-basis: 100%; margin: 0; font-size: 10px; text-align: left; }
+  .duel-mode .shop-controls .shop-compact-wallet { flex: 1 1 100%; justify-content: flex-start; gap: 6px; }
+  .duel-mode .shop-controls .primary, .duel-mode .shop-controls .secondary { flex: 1 1 auto; min-width: 0; min-height: 44px; padding: 10px 13px; }
+  .duel-mode .shop-activity { margin: 16px 0 12px; font-size: 10px; }
+  .duel-mode .replacement-picker { padding: 12px; }
+  .duel-mode .replacement-heading h3 { font-size: 14px; }
+  .duel-mode .replacement-options { grid-template-columns: 1fr; }
+  .duel-mode .replacement-option { min-height: 76px; }
+  .duel-mode .replacement-option-copy strong { font-size: 12px; }
+}
+@media (max-width: 370px) {
+  .duel-mode .shop-layout { grid-template-columns: 1fr; }
+  .duel-mode .shop-layout > .shop-player:first-child { grid-column: 1; grid-row: 2; }
+  .duel-mode .shop-layout > .shop-player:last-child { grid-column: 1; grid-row: 3; }
+  .duel-mode .shop-build { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .duel-mode .shop-product { grid-template-columns: 72px minmax(0, 1fr) 70px; column-gap: 10px; padding: 13px 10px; }
+  .duel-mode .duel-shell .product-art img.joker-illustration { width: 72px; height: 108px; }
+  .duel-mode .product-art { min-height: 120px; }
+}

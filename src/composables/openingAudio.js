@@ -11,6 +11,7 @@ export function createOpeningAudio(base, onBlocked = () => {}, AudioClass = glob
     cover.volume = 0.8
     cover.play().then(() => {
       if (!idle || !enabled || disposed) cover.pause()
+      if (disposed) return
       blocked = false
       onBlocked(false)
     }).catch(() => { if (idle && !disposed) { blocked = true; onBlocked(true) } })

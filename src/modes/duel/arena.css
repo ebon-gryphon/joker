@@ -1,0 +1,250 @@
+/* A worn green card table, lit in patches. Geometry stays separate from play rules. */
+/* These containers receive navigation focus, while their controls keep the
+   visible keyboard focus ring. Avoid a browser-blue frame around the table. */
+.duel-mode .arena-seat[tabindex='-1']:focus,
+.duel-mode .shop-screen[tabindex='-1']:focus { outline:none; }
+.duel-mode .duel-brand { display:flex; align-items:center; gap:20px; }
+.duel-mode .duel-title h1 { margin:1px 0 0; font-size:22px; letter-spacing:4px; }
+.duel-mode .duel-header-tools { display:flex; align-items:center; gap:10px; }
+.duel-mode .duel-header-tools .save-status { color:#a2a18f; font-size:9px; }
+.duel-mode .music-toggle { display:flex; align-items:center; gap:6px; border:1px solid #99785f45; border-radius:20px; background:#141e18b8; padding:6px 11px; color:#c6b394; min-height:34px; }
+.duel-mode .music-toggle > span { font:20px Georgia; }
+.duel-mode .music-toggle small { font-size:9px; }
+.duel-mode .music-toggle[aria-pressed='false'] { color:#929580; }
+.duel-mode .round-track { display:flex; align-items:center; gap:8px; list-style:none; padding:0; margin:0; }
+.duel-mode .round-track > li { display:grid; place-items:center; width:29px; height:29px; border:1px solid #a78b6d36; color:#a6a28f; font:12px Georgia; background:#101811; clip-path:polygon(16% 0,84% 0,100% 16%,100% 84%,84% 100%,16% 100%,0 84%,0 16%); }
+.duel-mode .round-track > li.current { color:#f0d2a7; border-color:#d1a579; background:#b67a472b; box-shadow:inset 0 0 9px #c7954a22; }
+.duel-mode .round-track > li.won { color:#c2d1b7; border-color:#91aa82; background:#6c8c642e; }
+.duel-mode .round-track > li.lost { color:#deb29a; border-color:#ad7762; background:#904d3c30; }
+.duel-mode .round-track > li.draw { color:#c8bca8; border-color:#a1927c; }
+.duel-mode .duel-arena { position:relative; isolation:isolate; margin-top:18px; border:1px solid #92734d75; background:linear-gradient(120deg,#08110b40,#0b170f20 65%,#1e130b32); box-shadow:0 22px 70px #0007,inset 0 0 45px #03080440; }
+.duel-mode .duel-arena::before, .duel-mode .duel-arena::after { content:'◆'; position:absolute; top:-6px; color:#8b714e; font:10px Georgia; z-index:4; }
+.duel-mode .duel-arena::before { left:15px; }.duel-mode .duel-arena::after { right:15px; }
+.duel-mode .duel-stage { position:relative; min-height:221px; padding:25px 4.5% 18px; overflow:hidden; border-bottom:1px solid #9b7d4c45; background:linear-gradient(90deg,#09140ee8,#0a130b87 65%,transparent),radial-gradient(ellipse at 82% 45%,#96704612,transparent 50%); }
+.duel-mode .stage-copy { position:relative; width:63%; z-index:3; }
+.duel-mode .stage-kicker { color:#b58d6d; font:8px Georgia; letter-spacing:3px; }
+.duel-mode .stage-title { display:flex; align-items:baseline; justify-content:space-between; gap:10px; margin:5px 0 15px; }
+.duel-mode .stage-title h2 { font:500 22px 'Songti SC',serif; color:#e7d7bb; letter-spacing:2px; }
+.duel-mode .duel-round { color:#a49990; font-size:9px; white-space:nowrap; }
+.duel-mode .duel-round b { color:#d2aa7d; font:17px Georgia; margin:0 3px; }
+.duel-mode .arena-scoreboard { display:grid; grid-template-columns:minmax(0,1fr) 40px minmax(0,1fr); align-items:center; }
+.duel-mode .contender-score { display:flex; flex-direction:column; min-width:0; }
+.duel-mode .contender-name { display:flex; align-items:center; gap:7px; color:#cbd3bf; font:500 16px 'Songti SC',serif; letter-spacing:2px; }
+.duel-mode .contender-name i { color:#a4b594; font-style:normal; font-size:16px; }
+.duel-mode .contender-name small { color:#a2ad97; font:8px system-ui; letter-spacing:1px; }
+.duel-mode .rival-score .contender-name { color:#dab6a2; }
+.duel-mode .rival-score .contender-name i { color:#bb7f69; }
+.duel-mode .rival-score .contender-name small { color:#b09985; }
+.duel-mode .contender-score > strong { color:#e6e2d5; font:48px/1.06 Georgia,serif; font-variant-numeric:tabular-nums; letter-spacing:-1px; margin-top:3px; animation:duel-score-in .3s ease-out; }
+.duel-mode .rival-score > strong { color:#e3c2ad; }
+.duel-mode .round-wins { color:#a5a48f; font-size:9px; margin-top:4px; }
+.duel-mode .round-wins b { font:14px Georgia; color:#c5a782; padding:0 4px; }
+.duel-mode .versus { align-self:center; color:#967c66; font:italic 15px Georgia; letter-spacing:1px; padding-top:6px; }
+.duel-mode .score-contest { position:relative; display:flex; gap:15px; align-items:center; margin-top:13px; padding-top:10px; color:#cfb293; font-size:10px; }
+.duel-mode .score-contest small { color:#a0a18c; font-size:8px; }
+.duel-mode .score-contest-line { position:absolute; left:0; right:0; top:0; height:2px; background:linear-gradient(to right,#80966c 0%,#b8baa0 var(--score-share),#ba9476 var(--score-share),#884735 100%); }
+.duel-mode .score-contest-line::after { content:''; position:absolute; left:var(--score-share); top:-2px; width:6px; height:6px; background:#ddbc93; transform:translateX(-50%) rotate(45deg); box-shadow:0 1px 4px #0008; }
+.duel-mode .rival-presence { position:absolute; right:1%; bottom:0; width:35%; height:100%; pointer-events:none; }
+.duel-mode .rival-halo { position:absolute; width:190px; height:190px; left:50%; top:50%; transform:translate(-50%,-50%); border:0; border-radius:50%; background:radial-gradient(ellipse,#aa8d5124,transparent 67%); }
+.duel-mode .rival-portrait { display:block; position:absolute; width:100%; height:120%; top:0; object-fit:contain; object-position:center top; mask-image:linear-gradient(#000 68%,transparent 84%); }
+.duel-mode .rival-signature { position:absolute; bottom:9px; left:0; right:0; text-align:center; color:#c29e74; font:9px Georgia; letter-spacing:4px; text-shadow:0 2px 4px #000; }
+.duel-mode .rival-signature > span { display:block; color:#a79389; font:8px system-ui; letter-spacing:2px; margin-top:3px; }
+.duel-mode .arena-seat { padding:16px 4.5%; }
+.duel-mode .rival-seat { background:linear-gradient(90deg,#6b302319,transparent); }
+.duel-mode .your-seat { background:linear-gradient(90deg,#344c3326,transparent); }
+.duel-mode .seat-heading { display:flex; align-items:center; gap:13px; margin-bottom:12px; }
+.duel-mode .seat-heading h2 { color:#c8c4b9; font:500 13px 'Songti SC',serif; letter-spacing:2px; flex-shrink:0; }
+.duel-mode .seat-symbol { color:#9db18b; margin-right:8px; }
+.duel-mode .rival-seat .seat-symbol { color:#ba8069; }
+.duel-mode .seat-state { display:flex; align-items:center; gap:6px; color:#a1ae93; font-size:9px; }
+.duel-mode .rival-seat .seat-state { color:#bd9c88; }
+.duel-mode .seat-resources { display:flex; align-items:center; gap:16px; margin-left:auto; color:#a2a18f; font-size:9px; white-space:nowrap; }
+.duel-mode .seat-resources b { color:#d5c7b1; font:15px Georgia; margin-left:5px; }
+.duel-mode .seat-resources small { color:#939880; font-size:8px; }
+.duel-mode .seat-resources .wallet { color:#d1ab79; font:17px Georgia; }
+.duel-mode .seat-content { display:grid; grid-template-columns:174px minmax(0,1fr); align-items:center; gap:28px; }
+.duel-mode .arena-lineup { position:relative; align-self:start; min-width:0; }
+.duel-mode .arena-lineup summary { position:relative; display:flex; align-items:center; flex-wrap:wrap; gap:7px; padding:8px 10px; background:#112218d4; border-left:2px solid #8b9d70; list-style:none; cursor:pointer; }
+.duel-mode .rival-seat .arena-lineup summary { background:#281b14c9; border-left-color:#a26c52; }
+.duel-mode .arena-lineup summary::-webkit-details-marker { display:none; }
+.duel-mode .lineup-label { flex-basis:100%; color:#b5b19c; font-size:9px; }
+.duel-mode .lineup-label b { color:#bda17b; font:10px Georgia; margin-left:8px; }
+.duel-mode .lineup-empty { color:#a2a28d; font-size:8px; }
+.duel-mode .lineup-empty-detail { margin:5px; color:#b8b29e; font-size:10px; line-height:1.7; }
+.duel-mode .lineup-thumbnails { display:flex; gap:3px; flex-wrap:wrap; }
+.duel-mode .lineup-thumbnails img.joker-illustration { width:26px; height:39px; border-radius:2px; box-shadow:2px 3px 5px #0007; }
+.duel-mode .lineup-expand { position:absolute; top:5px; right:8px; color:#b19476; }
+.duel-mode .arena-lineup[open] .lineup-expand { transform:rotate(180deg); }
+.duel-mode .lineup-details { position:absolute; left:0; top:calc(100% + 5px); width:270px; max-width:78vw; padding:8px; z-index:15; background:#111d15fa; border:1px solid #ad866270; box-shadow:0 8px 25px #0009; }
+.duel-mode .lineup-detail { display:flex; align-items:center; gap:10px; padding:7px; }
+.duel-mode .lineup-detail + .lineup-detail { border-top:1px solid #b69d7b20; }
+.duel-mode .lineup-detail img.joker-illustration { width:36px; height:54px; border-radius:2px; }
+.duel-mode .lineup-detail strong { color:#d4b895; font-size:11px; font-weight:500; }
+.duel-mode .lineup-detail p { color:#b7b49f; font-size:10px; margin:3px 0 0; }
+.duel-mode .lineup-detail small { color:#d1aa79; font-size:9px; }
+.duel-mode .your-hand-wrap, .duel-mode .rival-hand-wrap { min-width:0; }
+.duel-mode .arena-hand { display:flex; justify-content:center; gap:8px; }
+.duel-mode .duel-shell .arena-hand .card-view { width:78px; height:auto; aspect-ratio:100/145; flex:0 1 78px; min-width:0; }
+.duel-mode .duel-shell .rival-hand .card-view { max-width:52px; flex-basis:52px; }
+.duel-mode .deck-count { display:block; text-align:center; margin-top:7px; color:#a4a48f; font-size:8px; }
+.duel-mode .clash-zone { display:grid; grid-template-columns:minmax(0,1fr) 30px minmax(0,1fr); align-items:stretch; margin:0 4.5%; padding:12px 0; border-block:1px solid #b18c6333; background:linear-gradient(90deg,#6583560b,transparent 48%,#995c390b); }
+.duel-mode .clash-hand { min-width:0; text-align:center; }
+.duel-mode .clash-label { color:#b1bfa2; font-size:9px; letter-spacing:2px; }
+.duel-mode .clash-hand:last-child .clash-label { color:#c39e87; }
+.duel-mode .clash-play { display:flex; align-items:center; justify-content:center; gap:17px; min-height:76px; padding:7px 0; }
+.duel-mode .played-cards { display:flex; padding-left:10px; }
+.duel-mode .duel-shell .played-cards .card-view { width:42px; height:61px; flex:0 0 42px; margin-left:-10px; }
+.duel-mode .calculation strong { display:block; color:#bcb6a2; font-size:10px; font-weight:500; }
+.duel-mode .calculation em { display:block; color:#e3ba8c; font:24px Georgia; }
+.duel-mode .empty-play { display:flex; align-items:center; justify-content:center; gap:11px; min-height:76px; color:#8c987d; }
+.duel-mode .empty-play > span { font:27px Georgia; opacity:.7; }
+.duel-mode .empty-play small { font-size:9px; letter-spacing:2px; }
+.duel-mode .clash-divider { display:flex; align-items:center; flex-direction:column; gap:5px; padding:7px 0; color:#a07c5e; font:9px Georgia; opacity:.6; }
+.duel-mode .clash-divider i { width:1px; flex:1; background:linear-gradient(transparent,#ac87637a,transparent); }
+.duel-mode .duel-shell .clash-hand .score-breakdown { display:inline-block; max-width:100%; margin:0; padding:0 8px; background:none; border:0; font-size:10px; text-align:left; }
+.duel-mode .duel-shell .clash-hand .score-breakdown summary { min-height:24px; padding:3px 0; color:#a49e8a; font-size:9px; }
+.duel-mode .duel-shell .hand-tools { display:flex; align-items:center; flex-wrap:wrap; gap:5px; margin:0; color:#aaa994; font-size:9px; }
+.duel-mode .hand-tools > span { display:none; }
+.duel-mode .your-seat .seat-heading { margin-bottom:22px; }
+.duel-mode .duel-shell .hand-tools button, .duel-mode .tempo-controls button { min-height:28px; padding:5px 8px; border:1px solid #8a8c654d; border-radius:2px; background:#101b11c7; color:#b7b39e; font-size:9px; }
+.duel-mode .duel-shell .hand-tools button[aria-pressed='true'], .duel-mode .tempo-controls button[aria-pressed='true'] { color:#d8b58e; border-color:#bb906775; background:#b28a5917; }
+.duel-mode .actions { display:flex; align-items:center; gap:9px; border-top:1px solid #a88a6330; margin-top:18px; padding-top:15px; }
+.duel-mode .selection { margin-right:auto; }
+.duel-mode .selection strong { display:block; font:500 16px 'Songti SC',serif; letter-spacing:1px; color:#ddc2a0; }
+.duel-mode .selection span { display:block; margin-top:4px; font-size:10px; color:#b4b39e; }
+.duel-mode .play-button { min-width:140px; letter-spacing:3px; font-size:14px; }
+.duel-mode .your-seat > .score-breakdown { margin:12px 0 0; }
+.duel-mode .table-extras { display:flex; align-items:center; justify-content:space-between; gap:12px; border-top:1px solid #ac89632a; padding:5px 0; }
+.duel-mode .table-extras p { color:#a5a48e; font-size:10px; }
+.duel-mode .duel-shell .tempo-controls { display:flex; align-items:center; gap:5px; margin:0; color:#aaa28a; font-size:9px; }
+
+@media(max-width:1050px) {
+  .duel-mode .seat-content { grid-template-columns:135px minmax(0,1fr); gap:18px; }
+  .duel-mode .arena-seat { padding:13px 3.5%; }
+  .duel-mode .duel-stage { min-height:200px; padding:20px 3.5% 16px; }
+  .duel-mode .stage-copy { width:65%; }
+  .duel-mode .stage-title h2 { font-size:20px; }
+  .duel-mode .stage-title { margin-bottom:12px; }
+  .duel-mode .contender-score > strong { font-size:43px; }
+  .duel-mode .arena-hand { gap:5px; }
+  .duel-mode .duel-header-tools .save-status { display:none; }
+}
+@media(max-width:760px) {
+  .duel-mode .duel-title h1 { font-size:19px; letter-spacing:2px; }
+  .duel-mode .duel-title .eyebrow { font-size:7px; }
+  .duel-mode .round-track { gap:5px; }
+  .duel-mode .round-track > li { width:24px; height:26px; font-size:10px; }
+  .duel-mode .music-toggle { padding:5px 8px; }.duel-mode .music-toggle small { display:none; }
+  .duel-mode .duel-header-tools { gap:6px; }
+  .duel-mode .duel-stage { min-height:174px; padding:15px 3% 12px; }
+  .duel-mode .stage-kicker { font-size:6px; letter-spacing:2px; }
+  .duel-mode .stage-title { margin:4px 0 10px; }
+  .duel-mode .stage-title h2 { font-size:17px; }
+  .duel-mode .duel-round { font-size:8px; }
+  .duel-mode .duel-round b { font-size:14px; }
+  .duel-mode .arena-scoreboard { grid-template-columns:minmax(0,1fr) 28px minmax(0,1fr); }
+  .duel-mode .contender-name { font-size:13px; }.duel-mode .contender-name small { display:none; }
+  .duel-mode .contender-score > strong { font-size:36px; }
+  .duel-mode .score-contest { gap:9px; font-size:9px; margin-top:10px; padding-top:8px; }
+  .duel-mode .score-contest small { font-size:7px; }
+  .duel-mode .rival-halo { width:130px; height:130px; }
+  .duel-mode .rival-signature { font-size:7px; letter-spacing:2px; bottom:5px; }
+  .duel-mode .rival-signature > span { font-size:7px; letter-spacing:0; }
+  .duel-mode .seat-content { grid-template-columns:104px minmax(0,1fr); gap:12px; }
+  .duel-mode .seat-heading { gap:9px; margin-bottom:9px; }
+  .duel-mode .seat-heading h2 { font-size:11px; letter-spacing:1px; }
+  .duel-mode .seat-state { font-size:8px; }
+  .duel-mode .seat-resources { gap:10px; font-size:8px; }
+  .duel-mode .seat-resources b { font-size:14px; margin-left:3px; }
+  .duel-mode .seat-resources .wallet { font-size:14px; }
+  .duel-mode .arena-seat { padding:11px 3%; }
+  .duel-mode .arena-lineup summary { padding:6px 7px; }
+  .duel-mode .lineup-thumbnails img.joker-illustration { width:22px; height:33px; }
+  .duel-mode .lineup-label { font-size:8px; }.duel-mode .lineup-label b { font-size:9px; margin-left:4px; }
+  .duel-mode .arena-hand { gap:4px; }
+  .duel-mode .duel-shell .rival-hand .card-view { max-width:43px; flex-basis:43px; }
+  .duel-mode .clash-zone { grid-template-columns:minmax(0,1fr) 20px minmax(0,1fr); margin:0 3%; padding:8px 0; }
+  .duel-mode .clash-play, .duel-mode .empty-play { min-height:54px; padding:5px 0; }
+  .duel-mode .duel-shell .played-cards .card-view { width:32px; height:47px; flex-basis:32px; margin-left:-11px; }
+  .duel-mode .calculation em { font-size:20px; }
+  .duel-mode .clash-play { gap:9px; }
+  .duel-mode .actions { margin-top:14px; padding-top:12px; }
+}
+@media(max-width:520px) {
+  .duel-mode .masthead { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:8px; }
+  .duel-mode .duel-brand { gap:12px; }.duel-mode .duel-brand .wordmark { font-size:16px; letter-spacing:2px; }
+  .duel-mode .duel-title { white-space:nowrap; }.duel-mode .duel-title h1 { font-size:17px; }
+  .duel-mode .round-track { grid-column:1/-1; grid-row:2; justify-content:center; }
+  .duel-mode .duel-header-tools { grid-column:2; grid-row:1; }
+  .duel-mode .duel-header-tools .quiet { min-height:32px; padding:4px; font-size:9px; }
+  .duel-mode .duel-arena { margin-top:12px; }
+  .duel-mode .duel-stage { min-height:154px; padding:15px 4% 12px; }
+  .duel-mode .stage-copy { width:69%; }
+  .duel-mode .stage-kicker { display:none; }
+  .duel-mode .stage-title h2 { font-size:15px; letter-spacing:1px; }
+  .duel-mode .stage-title { flex-wrap:wrap; gap:3px; margin-top:0; margin-bottom:8px; }
+  .duel-mode .duel-round { font-size:7px; }.duel-mode .duel-round b { font-size:12px; }
+  .duel-mode .arena-scoreboard { grid-template-columns:minmax(0,1fr) 20px minmax(0,1fr); }
+  .duel-mode .contender-name { font-size:12px; gap:4px; }.duel-mode .contender-name i { font-size:11px; }
+  .duel-mode .contender-score > strong { font-size:clamp(23px,7.6vw,32px); }
+  .duel-mode .contender-score > strong.long-score { font-size:clamp(17px,5.3vw,24px); overflow-wrap:anywhere; }
+  .duel-mode .versus { font-size:10px; }
+  .duel-mode .round-wins { font-size:7px; }.duel-mode .round-wins b { font-size:11px; padding:0 2px; }
+  .duel-mode .score-contest { margin-top:9px; font-size:8px; padding-top:7px; }.duel-mode .score-contest small { display:none; }
+  .duel-mode .rival-presence { width:33%; right:-2%; }
+  .duel-mode .rival-portrait { height:100%; mask-image:linear-gradient(#000 84%,transparent 100%); }
+  .duel-mode .rival-halo { width:85px; height:85px; top:45%; }
+  .duel-mode .rival-signature { font-size:5px; letter-spacing:1px; }.duel-mode .rival-signature > span { display:none; }
+  .duel-mode .seat-heading { flex-wrap:wrap; gap:5px 8px; }
+  .duel-mode .seat-heading h2 { font-size:10px; }.duel-mode .seat-symbol { margin-right:4px; }
+  .duel-mode .seat-state { font-size:7px; }
+  .duel-mode .seat-resources { gap:7px; font-size:7px; }.duel-mode .seat-resources b { font-size:12px; }
+  .duel-mode .seat-resources .wallet { font-size:13px; }
+  .duel-mode .seat-content { grid-template-columns:minmax(0,1fr); gap:8px; }
+  .duel-mode .arena-lineup { grid-row:2; }
+  .duel-mode .arena-lineup summary { flex-wrap:nowrap; padding:4px 7px; min-height:29px; }
+  .duel-mode .lineup-label { flex-basis:auto; margin-right:6px; }
+  .duel-mode .lineup-thumbnails img.joker-illustration { width:15px; height:22px; border-radius:1px; }
+  .duel-mode .lineup-expand { top:2px; right:8px; }
+  .duel-mode .deck-count { display:none; }
+  .duel-mode .duel-shell .arena-hand { display:grid; grid-template-columns:repeat(8,minmax(0,1fr)); gap:0; padding-right:8px; justify-items:start; }
+  .duel-mode .duel-shell .arena-hand .card-view { width:44px; max-width:none; }
+  .duel-mode .duel-shell .rival-hand .card-view { width:36px; height:52px; }
+  .duel-mode .duel-shell .hand-tools { order:4; width:100%; margin-top:4px; }
+  .duel-mode .hand-tools > span { display:block; margin-left:auto; }
+  .duel-mode .duel-shell .hand-tools button { min-height:32px; font-size:9px; }
+  .duel-mode .your-seat .seat-heading { margin-bottom:14px; }
+  .duel-mode .clash-zone { padding-top:6px; padding-bottom:6px; }
+  .duel-mode .clash-play { flex-direction:column; gap:6px; padding:6px 0; }
+  .duel-mode .duel-shell .played-cards .card-view { width:29px; height:43px; flex-basis:29px; }
+  .duel-mode .calculation { display:flex; align-items:baseline; gap:7px; }.duel-mode .calculation em { font-size:17px; }
+  .duel-mode .clash-label { font-size:8px; }.duel-mode .duel-shell .clash-hand .score-breakdown summary { font-size:8px; }
+  .duel-mode .selection strong { font-size:14px; }.duel-mode .selection span { font-size:9px; }
+  .duel-mode .actions { gap:6px; margin-top:8px; }.duel-mode .actions .secondary { padding:10px 13px; font-size:12px; }
+  .duel-mode .play-button { min-width:90px; padding:10px 12px; font-size:13px; letter-spacing:2px; }.duel-mode .play-button span { margin-left:7px; }
+  .duel-mode .table-extras { align-items:flex-start; }.duel-mode .table-extras p { font-size:9px; max-width:16em; }
+  .duel-mode .tempo-controls > span { display:none; }
+}
+@media(min-width:521px) and (max-height:780px) {
+  .duel-mode .duel-title .eyebrow { display:none; }.duel-mode .masthead { padding-bottom:7px; }.duel-mode .duel-arena { margin-top:10px; }
+  .duel-mode .duel-stage { min-height:141px; padding-top:10px; padding-bottom:10px; }
+  .duel-mode .stage-title { margin:2px 0 7px; }.duel-mode .stage-title h2 { font-size:17px; }
+  .duel-mode .stage-kicker { display:none; }.duel-mode .contender-score > strong { font-size:32px; }
+  .duel-mode .round-wins { font-size:8px; margin-top:2px; }.duel-mode .score-contest { margin-top:8px; padding-top:7px; }
+  .duel-mode .arena-seat { padding-top:9px; padding-bottom:9px; }.duel-mode .seat-heading { margin-bottom:8px; }
+  .duel-mode .your-seat .seat-heading { margin-bottom:10px; }
+  .duel-mode .duel-shell .rival-hand .card-view { max-width:39px; flex-basis:39px; }
+  .duel-mode .clash-zone { padding-top:4px; padding-bottom:4px; }.duel-mode .clash-play, .duel-mode .empty-play { min-height:45px; padding:4px 0; }
+  .duel-mode .duel-shell .played-cards .card-view { width:30px; height:44px; flex-basis:30px; }
+  .duel-mode .duel-shell .clash-hand .score-breakdown summary { min-height:20px; padding:2px 0; }
+  .duel-mode .actions { margin-top:0; padding-top:7px; }.duel-mode .deck-count { display:none; }
+}
+@media(min-width:761px) and (min-height:781px) and (max-height:1000px) {
+  .duel-mode .duel-stage { min-height:180px; padding-top:12px; padding-bottom:8px; }
+  .duel-mode .stage-kicker { display:none; }
+  .duel-mode .stage-title { margin-bottom:10px; }
+  .duel-mode .duel-shell .arena-hand .card-view { max-width:68px; flex-basis:68px; }
+  .duel-mode .duel-shell .rival-hand .card-view { max-width:46px; flex-basis:46px; }
+  .duel-mode .clash-play, .duel-mode .empty-play { min-height:62px; }
+  .duel-mode .duel-shell .played-cards .card-view { width:34px; height:49px; flex-basis:34px; }
+}

@@ -1,0 +1,54 @@
+/* Shared frame and controls for the duel table and its between-round shop. */
+.duel-mode {
+  --duel-ink: #090e0c;
+  --duel-felt: #15291f;
+  --duel-paper: #e3d6bc;
+  --duel-muted: #aaa694;
+  --duel-copper: #af8c5d;
+  --duel-player: #a5b9a0;
+  --duel-rival: #c28b7c;
+  width: 100%; min-height: 100dvh; overflow: auto; color-scheme: dark;
+  font: 14px/1.5 system-ui, -apple-system, sans-serif; color: var(--duel-paper);
+  background: linear-gradient(90deg,#050807a8,#060b0961 40%,#050807ad), url('/duel/arena-dark-v3.png') center top / cover fixed, var(--duel-ink);
+}
+.duel-mode * { box-sizing: border-box; }
+.duel-mode button, .duel-mode a { -webkit-tap-highlight-color: transparent; }
+.duel-mode button { font: inherit; cursor: pointer; transition: background .15s, transform .15s; }
+.duel-mode button:disabled { opacity: .4; cursor: not-allowed; }
+.duel-mode button:hover:not(:disabled) { filter: brightness(1.14); }
+.duel-mode :is(button, a, summary):focus-visible { outline: 2px solid #d1b583; outline-offset: 4px; }
+.duel-mode .duel-shell { width: 100%; max-width: 1360px; padding: 18px 32px; margin: auto; }
+.duel-mode .masthead { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding-bottom: 12px; border-bottom: 1px solid #9d83513d; }
+.duel-mode .wordmark { font: 700 23px Georgia, serif; letter-spacing: 4px; color: #c6a677; text-decoration: none; }
+.duel-mode .wordmark span { font: 10px system-ui; letter-spacing: 2px; margin-left: 12px; color: var(--duel-muted); }
+.duel-mode .mode-return { border: 0; background: none; padding: 0; text-align: left; }
+.duel-mode .prototype { font-size: 11px; color: #bcae8f; text-align: center; }
+.duel-mode .quiet { min-height: 40px; background: none; border: 0; color: #b9b5a5; padding: 8px; font-size: 11px; }
+.duel-mode .eyebrow { font-size: 9px; letter-spacing: 3px; color: var(--duel-copper); }
+.duel-mode h1 { font: 500 28px/1.4 'Noto Serif SC', 'Songti SC', Georgia, serif; margin: 6px 0 0; }
+.duel-mode h2 { font: 500 20px 'Noto Serif SC', 'Songti SC', serif; margin: 0; }
+.duel-mode .primary, .duel-mode .secondary { min-height: 44px; border-radius: 2px; padding: 11px 21px; border: 1px solid #8d815650; white-space: nowrap; }
+.duel-mode .primary { background: linear-gradient(135deg, #73382e, #48241f); color: #f0dfc1; border-color: #ad8059; box-shadow: 0 3px 12px #0005,inset 0 1px #bd986b20; }
+.duel-mode .primary span { margin-left: 16px; }
+.duel-mode .secondary { background: #18231de0; color: #c8c4b2; }
+.duel-mode .pulse { display: inline-block; width: 5px; height: 5px; background: #b2a071; border-radius: 50%; flex-shrink: 0; }
+.duel-mode .pulse.thinking { animation: duel-blink .8s infinite alternate; }
+.duel-mode .live-status { display: flex; align-items: center; gap: 12px; padding: 12px 4px; min-height: 42px; font-size: 11px; color: #b7b4a4; text-shadow:0 1px 3px #000; }
+.duel-mode .live-status > span { flex-shrink: 0; color: #baa174; font-size: 9px; letter-spacing: 2px; }
+.duel-mode .history { font-size: 11px; margin-top: 12px; color: #aaa795; }
+.duel-mode .history summary { cursor: pointer; min-height: 36px; }
+.duel-mode .history summary span { font-size: 9px; margin-left: 12px; color: #8c907e; }
+.duel-mode .history p { margin: 8px 0; }
+.duel-mode footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #9d83512e; margin-top: 12px; padding-top: 4px; color: #929280; font-size: 10px; }
+.duel-mode .rules { background: #101b15f2; padding: 16px; line-height: 1.9; color: #c5c0ad; font-size: 12px; margin-top: 12px; border: 1px solid #9e815247; border-radius: 3px; }
+@keyframes duel-blink { to { opacity: .25; } }
+@keyframes duel-score-in { from { opacity: .5; transform: translateY(3px); } to { opacity: 1; transform: translateY(0); } }
+@media (max-width: 950px) { .duel-mode .duel-shell { padding: 12px 18px; } }
+@media (max-width: 600px) {
+  .duel-mode .duel-shell { padding: 10px; }
+  .duel-mode .wordmark { font-size: 20px; }
+  .duel-mode .wordmark span { display: none; }
+  .duel-mode .masthead { padding-bottom: 8px; }
+  .duel-mode .live-status { align-items: flex-start; font-size: 10px; }
+}
+@media (prefers-reduced-motion: reduce) { .duel-mode *, .duel-mode *::before, .duel-mode *::after { animation: none !important; transition: none !important; } }
